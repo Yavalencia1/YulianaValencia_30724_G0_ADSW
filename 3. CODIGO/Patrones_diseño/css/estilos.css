@@ -1,0 +1,478 @@
+/* 
+ * Capa de Presentación: Hojas de Estilos
+ * Define la paleta de colores del sistema según las capas arquitectónicas:
+ * - Azul (Presentación): Estructura, Navbar, Sidebar, Acciones Visuales.
+ * - Naranja (Negocio): Logs de Auditoría, Flujo de Estados, Notificaciones Bridge.
+ * - Verde (Datos): Reportes Composite, Ingresos, Saldos, Totales en LocalStorage.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+    /* Paleta Presentación (Azul) */
+    --color-pres-dark: #0f1e36;
+    --color-pres-medium: #1d3557;
+    --color-pres-light: #457b9d;
+    --color-pres-bg: #f4f6f9;
+    --color-pres-accent: #a8dadc;
+    
+    /* Paleta Negocio (Naranja) */
+    --color-neg-dark: #d65a31;
+    --color-neg-medium: #f4a261;
+    --color-neg-light: #fbe9e7;
+    --color-neg-accent: #e76f51;
+
+    /* Paleta Datos (Verde) */
+    --color-dat-dark: #1b4332;
+    --color-dat-medium: #2a9d8f;
+    --color-dat-light: #e8f5e9;
+    --color-dat-accent: #40916c;
+    
+    /* Variables generales */
+    --font-primary: 'Outfit', sans-serif;
+    --sidebar-width: 260px;
+    --transition-speed: 0.3s;
+    --border-radius-lg: 12px;
+    --border-radius-md: 8px;
+    --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+body {
+    font-family: var(--font-primary);
+    background-color: var(--color-pres-bg);
+    color: #333;
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+/* ==========================================================================
+   Estructura Base del Dashboard (Sidebar + Contenido Principal)
+   ========================================================================== */
+
+#app-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Barra Lateral (Sidebar) - Presentación (Azul) */
+.sidebar {
+    width: var(--sidebar-width);
+    background: linear-gradient(180deg, var(--color-pres-dark) 0%, #112240 100%);
+    color: #fff;
+    min-height: 100vh;
+    position: fixed;
+    transition: all var(--transition-speed);
+    z-index: 1000;
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.sidebar-header {
+    padding: 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sidebar-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--color-pres-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #fff;
+    border: 2px solid var(--color-pres-accent);
+}
+
+.sidebar-brand {
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+    flex-grow: 1;
+}
+
+.sidebar-item a {
+    display: flex;
+    align-items: center;
+    padding: 14px 24px;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-weight: 500;
+    border-left: 4px solid transparent;
+    transition: all 0.2s;
+    gap: 12px;
+}
+
+.sidebar-item a:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-item.active a {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.08);
+    border-left-color: var(--color-pres-accent);
+    font-weight: 600;
+}
+
+.sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.profile-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background-color: var(--color-neg-medium);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+}
+
+.profile-info {
+    max-width: 140px;
+}
+
+.profile-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+}
+
+.profile-role {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Área de Contenido Principal */
+.main-content {
+    margin-left: var(--sidebar-width);
+    flex-grow: 1;
+    padding: 30px;
+    transition: all var(--transition-speed);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Barra Superior (Navbar) - Presentación */
+.top-navbar {
+    background-color: #fff;
+    border-radius: var(--border-radius-lg);
+    padding: 15px 24px;
+    box-shadow: var(--box-shadow);
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.page-title {
+    font-weight: 700;
+    color: var(--color-pres-dark);
+    margin: 0;
+}
+
+/* ==========================================================================
+   Tarjetas Temáticas (KPIs) - Datos (Verde) y Negocio (Naranja)
+   ========================================================================== */
+
+.card-dashboard {
+    border: none;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--box-shadow);
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    background-color: #fff;
+}
+
+.card-dashboard:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Variaciones de tarjetas de datos (Verde) */
+.card-data {
+    border-left: 5px solid var(--color-dat-medium);
+}
+
+.card-data .icon-box {
+    background-color: var(--color-dat-light);
+    color: var(--color-dat-accent);
+}
+
+/* Variaciones de tarjetas de negocio (Naranja) */
+.card-business {
+    border-left: 5px solid var(--color-neg-medium);
+}
+
+.card-business .icon-box {
+    background-color: var(--color-neg-light);
+    color: var(--color-neg-accent);
+}
+
+.icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+}
+
+/* ==========================================================================
+   Logs de Auditoría y Panel de Notificaciones - Negocio (Naranja)
+   ========================================================================== */
+
+.console-container {
+    background-color: #1a1a24;
+    color: #f1f1f1;
+    border-radius: var(--border-radius-lg);
+    padding: 20px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.85rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    border-left: 5px solid var(--color-neg-medium);
+}
+
+.console-header {
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-primary);
+}
+
+.console-title {
+    font-weight: 700;
+    color: var(--color-neg-medium);
+}
+
+.console-logs {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.log-entry {
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+
+.log-time {
+    color: #888;
+}
+
+.log-user {
+    color: var(--color-pres-accent);
+}
+
+.log-success {
+    color: #81c784;
+}
+
+.log-warning {
+    color: var(--color-neg-medium);
+}
+
+.log-danger {
+    color: #e57373;
+}
+
+/* ==========================================================================
+   Modales y Formularios Estilizados
+   ========================================================================== */
+
+.modal-content {
+    border: none;
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header-pres {
+    background-color: var(--color-pres-dark);
+    color: white;
+    border-top-left-radius: var(--border-radius-lg);
+    border-top-right-radius: var(--border-radius-lg);
+}
+
+.btn-pres {
+    background-color: var(--color-pres-medium);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-md);
+    padding: 8px 20px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-pres:hover {
+    background-color: var(--color-pres-dark);
+    color: white;
+}
+
+.btn-neg {
+    background-color: var(--color-neg-accent);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-md);
+    padding: 8px 20px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-neg:hover {
+    background-color: var(--color-neg-dark);
+    color: white;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--color-pres-light);
+    box-shadow: 0 0 0 0.25rem rgba(69, 123, 157, 0.25);
+}
+
+/* ==========================================================================
+   Badges y Estados de Mantenimiento
+   ========================================================================== */
+
+.badge-estado {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}
+
+.badge-recibido {
+    background-color: #e2e3e5;
+    color: #383d41;
+}
+
+.badge-reparacion {
+    background-color: var(--color-neg-light);
+    color: var(--color-neg-dark);
+    border: 1px solid var(--color-neg-medium);
+}
+
+.badge-listo {
+    background-color: var(--color-pres-accent);
+    color: var(--color-pres-dark);
+}
+
+.badge-entregado {
+    background-color: var(--color-dat-light);
+    color: var(--color-dat-dark);
+    border: 1px solid var(--color-dat-accent);
+}
+
+/* Switch styling for Checklists */
+.form-check-input:checked {
+    background-color: var(--color-pres-medium);
+    border-color: var(--color-pres-medium);
+}
+
+/* ==========================================================================
+   Pantalla de Login
+   ========================================================================== */
+
+.login-wrapper {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--color-pres-dark) 0%, #1e3c72 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.login-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 450px;
+    padding: 40px;
+    backdrop-filter: blur(10px);
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: var(--color-pres-medium);
+    color: white;
+    font-size: 1.8rem;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+    box-shadow: 0 5px 15px rgba(29, 53, 87, 0.4);
+}
+
+/* ==========================================================================
+   Responsive e Interacciones
+   ========================================================================== */
+
+@media (max-width: 991.98px) {
+    .sidebar {
+        left: -260px;
+    }
+    
+    .sidebar.show {
+        left: 0;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding: 15px;
+    }
+    
+    .top-navbar {
+        margin-top: 50px;
+    }
+}
+
+.sidebar-toggle-btn {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 1010;
+    display: none;
+}
+
+@media (max-width: 991.98px) {
+    .sidebar-toggle-btn {
+        display: block;
+    }
+}

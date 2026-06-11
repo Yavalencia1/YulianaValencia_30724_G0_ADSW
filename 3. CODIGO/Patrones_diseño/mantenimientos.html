@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Mantenimientos - Sistema de Gestión de Mantenimientos</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Estilos Personalizados -->
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+    <div id="app-container">
+        <!-- Contenedor del Sidebar (Inyectado por JS) -->
+        <div id="sidebar-container"></div>
+
+        <!-- Contenido Principal -->
+        <main class="main-content">
+            <!-- Barra Superior (Inyectada por JS) -->
+            <div id="navbar-container"></div>
+
+            <!-- Panel de Mantenimientos -->
+            <div class="card card-dashboard p-4 mb-4">
+                <div class="row align-items-center mb-3">
+                    <div class="col-md-6 mb-2 mb-md-0">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white text-muted"><i class="bi bi-search"></i></span>
+                            <input type="text" id="buscar-mantenimiento" class="form-control" placeholder="Buscar por Cód. Mantenimiento, equipo, marca o estado...">
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-md-end" id="actions-container">
+                        <button class="btn btn-pres" id="btn-nuevo-mantenimiento">
+                            <i class="bi bi-plus-circle"></i> Registrar Mantenimiento
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle border-top mb-0" id="tabla-mantenimientos">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Cód. Ticket</th>
+                                <th>Equipo / Dispositivo</th>
+                                <th>Tipo</th>
+                                <th>Fecha Ingreso</th>
+                                <th>Estado</th>
+                                <th>Costos (Abono / Saldo)</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-mantenimientos-body">
+                            <!-- Los mantenimientos se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Terminal de Auditoría & Notificaciones (Inyectada por JS) -->
+            <div id="console-container"></div>
+        </main>
+    </div>
+
+    <!-- Modal para Crear/Editar Mantenimiento -->
+    <div class="modal fade" id="modalMantenimiento" tabindex="-1" aria-labelledby="modalMantenimientoTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header modal-header-pres">
+                    <h5 class="modal-title" id="modalMantenimientoTitle">Registrar Mantenimiento</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="form-mantenimiento">
+                    <input type="hidden" id="mnt-id">
+                    <div class="modal-body p-4">
+                        
+                        <!-- Sección 1: Datos del Dispositivo -->
+                        <h6 class="text-primary border-bottom pb-2 mb-3"><i class="bi bi-laptop"></i> 1. Información del Dispositivo</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-4 mb-2">
+                                <label for="mnt-equipo" class="form-label small fw-semibold text-secondary">Nombre de Equipo</label>
+                                <input type="text" class="form-control" id="mnt-equipo" placeholder="ej. Galaxy S22 Ultra" required>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label for="mnt-marca" class="form-label small fw-semibold text-secondary">Marca</label>
+                                <input type="text" class="form-control" id="mnt-marca" placeholder="ej. Samsung" required>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label for="mnt-modelo" class="form-label small fw-semibold text-secondary">Modelo</label>
+                                <input type="text" class="form-control" id="mnt-modelo" placeholder="ej. SM-S908B" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4 mb-2">
+                                <label for="mnt-tipo" class="form-label small fw-semibold text-secondary">Tipo de Dispositivo</label>
+                                <select class="form-select" id="mnt-tipo" required>
+                                    <option value="Celular">Celular</option>
+                                    <option value="Tablet">Tablet</option>
+                                    <option value="Laptop">Laptop</option>
+                                    <option value="PC Escritorio">PC Escritorio</option>
+                                    <option value="Consola">Consola</option>
+                                    <option value="Otro">Otro</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label for="mnt-serial" class="form-label small fw-semibold text-secondary">N° Serie / IMEI</label>
+                                <input type="text" class="form-control" id="mnt-serial" placeholder="ej. 357123..." required>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label for="mnt-pin" class="form-label small fw-semibold text-secondary">Clave PIN / Patrón</label>
+                                <input type="text" class="form-control" id="mnt-pin" placeholder="ej. 1234" required>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="mnt-accesorios" class="form-label small fw-semibold text-secondary">Accesorios Adicionales Entregados</label>
+                            <input type="text" class="form-control" id="mnt-accesorios" placeholder="ej. Cargador, funda, tarjeta SD...">
+                        </div>
+
+                        <!-- Sección 2: Checklist de Diagnóstico -->
+                        <h6 class="text-primary border-bottom pb-2 mb-3"><i class="bi bi-clipboard-check"></i> 2. Checklist de Daños / Funcionalidad (Marcar si funciona correctamente)</h6>
+                        <div class="row mb-4">
+                            <div class="col-md-4 col-sm-6 mb-2">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="dmg-enciende" checked>
+                                    <label class="form-check-label small" for="dmg-enciende">¿Enciende?</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-sm-6 mb-2">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="dmg-botones" checked>
+                                    <label class="form-check-label small" for="dmg-botones">Botones Físicos</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-sm-6 mb-2">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="dmg-camara" checked>
+                                    <label class="form-check-label small" for="dmg-camara">Cámaras (Frontal/Principal)</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-sm-6 mb-2">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="dmg-sensores" checked>
+                                    <label class="form-check-label small" for="dmg-sensores">Sensores</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-sm-6 mb-2">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="dmg-touchid" checked>
+                                    <label class="form-check-label small" for="dmg-touchid">Biometría (TouchID/FaceID)</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-sm-6 mb-2">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="dmg-wifi" checked>
+                                    <label class="form-check-label small" for="dmg-wifi">Redes Wi-Fi</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-sm-6 mb-2">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="dmg-senal" checked>
+                                    <label class="form-check-label small" for="dmg-senal">Señal de Red Celular</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-sm-6 mb-2">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="dmg-sonido" checked>
+                                    <label class="form-check-label small" for="dmg-sonido">Altavoces / Auricular</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-sm-6 mb-2">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="dmg-carga" checked>
+                                    <label class="form-check-label small" for="dmg-carga">Pin de Carga</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección 3: Asignación, Costos y Estado -->
+                        <h6 class="text-primary border-bottom pb-2 mb-3"><i class="bi bi-cash-coin"></i> 3. Costos, Asignación y Control</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-2">
+                                <label for="mnt-cliente" class="form-label small fw-semibold text-secondary">Cliente</label>
+                                <select class="form-select" id="mnt-cliente" required>
+                                    <!-- Cargar Clientes -->
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label for="mnt-tecnico" class="form-label small fw-semibold text-secondary">Técnico Asignado</label>
+                                <select class="form-select" id="mnt-tecnico" required>
+                                    <!-- Cargar Técnicos -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4 mb-2">
+                                <label for="mnt-total" class="form-label small fw-semibold text-secondary">Total Mantenimiento ($)</label>
+                                <input type="number" step="0.01" min="0" class="form-control text-success fw-bold" id="mnt-total" placeholder="0.00" required>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label for="mnt-abono" class="form-label small fw-semibold text-secondary">Abono Inicial ($)</label>
+                                <input type="number" step="0.01" min="0" class="form-control text-primary fw-bold" id="mnt-abono" placeholder="0.00">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label for="mnt-saldo" class="form-label small fw-semibold text-secondary">Saldo Pendiente ($)</label>
+                                <input type="text" class="form-control text-danger fw-bold bg-light" id="mnt-saldo" readonly value="0.00">
+                            </div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-md-6 mb-2">
+                                <label for="mnt-fecha-entrega" class="form-label small fw-semibold text-secondary">Fecha Estimada de Entrega</label>
+                                <input type="date" class="form-control" id="mnt-fecha-entrega" required>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label for="mnt-estado" class="form-label small fw-semibold text-secondary">Estado del Mantenimiento</label>
+                                <select class="form-select" id="mnt-estado" required>
+                                    <option value="Recibido">Recibido</option>
+                                    <option value="En Reparación">En Reparación</option>
+                                    <option value="Listo para Entrega">Listo para Entrega</option>
+                                    <option value="Entregado">Entregado</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label for="mnt-observaciones" class="form-label small fw-semibold text-secondary">Detalle de Falla / Diagnóstico Técnico</label>
+                            <textarea class="form-control" id="mnt-observaciones" rows="3" placeholder="Describa el diagnóstico inicial y observaciones de daños..." required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-top-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-pres" id="btn-guardar-mantenimiento">Guardar Ficha</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cargar Scripts en Orden de Dependencia -->
+    <script src="js/data/repositorio.js"></script>
+    <script src="js/patterns/composite.js"></script>
+    <script src="js/patterns/bridge.js"></script>
+    <script src="js/business/controlador.js"></script>
+    <script src="js/patterns/proxy.js"></script>
+    <script src="js/presentation/ui.js"></script>
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Script de ajuste fino para rol Cliente en el HTML -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Asegurarse de que si es Cliente, se oculte el botón de registrar nuevo
+            const sesion = window.controlador.sesionActiva;
+            if (sesion && sesion.rol === 'Cliente') {
+                const btnNuevo = document.getElementById('btn-nuevo-mantenimiento');
+                if (btnNuevo) btnNuevo.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

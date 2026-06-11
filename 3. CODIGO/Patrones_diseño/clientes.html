@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Clientes - Sistema de Gestión de Mantenimientos</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Estilos Personalizados -->
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+    <div id="app-container">
+        <!-- Contenedor del Sidebar (Inyectado por JS - Azul Presentación) -->
+        <div id="sidebar-container"></div>
+
+        <!-- Contenido Principal -->
+        <main class="main-content">
+            <!-- Barra Superior (Inyectada por JS) -->
+            <div id="navbar-container"></div>
+
+            <!-- Panel de Operaciones CRUD Clientes -->
+            <div class="card card-dashboard p-4 mb-4">
+                <div class="row align-items-center mb-3">
+                    <div class="col-md-6 mb-2 mb-md-0">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white text-muted"><i class="bi bi-search"></i></span>
+                            <input type="text" id="buscar-cliente" class="form-control" placeholder="Buscar cliente por cédula, nombre o correo...">
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <button class="btn btn-pres" id="btn-nuevo-cliente">
+                            <i class="bi bi-person-plus"></i> Registrar Nuevo Cliente
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle border-top mb-0" id="tabla-clientes">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Cédula</th>
+                                <th>Correo Electrónico</th>
+                                <th>Teléfono</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-clientes-body">
+                            <!-- Los clientes se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Terminal de Auditoría & Notificaciones (Inyectada por JS - Naranja Negocio) -->
+            <div id="console-container"></div>
+        </main>
+    </div>
+
+    <!-- Modal para Crear/Editar Cliente -->
+    <div class="modal fade" id="modalCliente" tabindex="-1" aria-labelledby="modalClienteTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header modal-header-pres">
+                    <h5 class="modal-title" id="modalClienteTitle">Registrar Cliente</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="form-cliente">
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label for="cli-cedula" class="form-label small fw-semibold text-secondary">Número de Cédula</label>
+                            <input type="text" class="form-control" id="cli-cedula" placeholder="ej. 1712345678" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="cli-nombre" class="form-label small fw-semibold text-secondary">Nombre Completo</label>
+                            <input type="text" class="form-control" id="cli-nombre" placeholder="ej. Juan Pérez" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="cli-correo" class="form-label small fw-semibold text-secondary">Correo Electrónico</label>
+                            <input type="email" class="form-control" id="cli-correo" placeholder="ej. juan.perez@mail.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="cli-telefono" class="form-label small fw-semibold text-secondary">Teléfono de Contacto</label>
+                            <input type="text" class="form-control" id="cli-telefono" placeholder="ej. 0987654321" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="cli-usuario" class="form-label small fw-semibold text-secondary">Usuario del Sistema (Opcional)</label>
+                            <input type="text" class="form-control" id="cli-usuario" placeholder="ej. jperez">
+                            <div class="form-text text-muted">Si se omite, se usará la cédula como usuario y contraseña.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-top-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-pres" id="btn-guardar-cliente">Guardar Cliente</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cargar Scripts en Orden de Dependencia -->
+    <script src="js/data/repositorio.js"></script>
+    <script src="js/patterns/composite.js"></script>
+    <script src="js/patterns/bridge.js"></script>
+    <script src="js/business/controlador.js"></script>
+    <script src="js/patterns/proxy.js"></script>
+    <script src="js/presentation/ui.js"></script>
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
