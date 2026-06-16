@@ -457,16 +457,33 @@ class UI_SistemaMantenimiento {
         // Enviar formulario (Crear / Editar)
         formCliente?.addEventListener('submit', (e) => {
             e.preventDefault();
-            const cliente = {
-                cedula: document.getElementById('cli-cedula').value.trim(),
-                nombre: document.getElementById('cli-nombre').value.trim(),
-                correo: document.getElementById('cli-correo').value.trim(),
-                telefono: document.getElementById('cli-telefono').value.trim(),
-                usuario: document.getElementById('cli-usuario').value.trim() || undefined
-            };
+            const cedula = document.getElementById('cli-cedula').value.trim();
+            const nombre = document.getElementById('cli-nombre').value.trim();
+            const correo = document.getElementById('cli-correo').value.trim();
+            const telefono = document.getElementById('cli-telefono').value.trim();
+            const usuario = document.getElementById('cli-usuario').value.trim() || undefined;
+
+            // Validaciones adicionales
+            if (!cedula || !nombre || !correo || !telefono) {
+                alert("Todos los campos obligatorios deben ser completados.");
+                return;
+            }
+
+            if (!correo.includes('@')) {
+                alert("Ingrese un correo electrónico válido.");
+                return;
+            }
 
             const esEdicion = document.getElementById('cli-cedula').readOnly;
             const accion = esEdicion ? 'editar' : 'crear';
+
+            const cliente = {
+                cedula,
+                nombre,
+                correo,
+                telefono,
+                usuario
+            };
 
             try {
                 this.controlador.gestionarCRUDCliente({ accion, cliente });
@@ -584,15 +601,36 @@ class UI_SistemaMantenimiento {
 
         formTecnico?.addEventListener('submit', (e) => {
             e.preventDefault();
-            const tecnico = {
-                nombre: document.getElementById('tec-nombre').value.trim(),
-                especialidad: document.getElementById('tec-especialidad').value.trim(),
-                correo: document.getElementById('tec-correo').value.trim(),
-                telefono: document.getElementById('tec-telefono').value.trim()
-            };
+            const nombre = document.getElementById('tec-nombre').value.trim();
+            const especialidad = document.getElementById('tec-especialidad').value.trim();
+            const correo = document.getElementById('tec-correo').value.trim();
+            const telefono = document.getElementById('tec-telefono').value.trim();
+
+            // Validaciones adicionales
+            if (!nombre || !especialidad || !correo || !telefono) {
+                alert("Todos los campos obligatorios deben ser completados.");
+                return;
+            }
+
+            if (!correo.includes('@')) {
+                alert("Ingrese un correo electrónico válido.");
+                return;
+            }
+
+            if (especialidad.length === 0) {
+                alert("La especialidad del técnico no puede estar vacía.");
+                return;
+            }
 
             const esEdicion = document.getElementById('tec-correo').readOnly;
             const accion = esEdicion ? 'editar' : 'crear';
+
+            const tecnico = {
+                nombre,
+                especialidad,
+                correo,
+                telefono
+            };
 
             try {
                 this.controlador.gestionarCRUDTecnico({ accion, tecnico });
@@ -817,6 +855,48 @@ class UI_SistemaMantenimiento {
         formMnt?.addEventListener('submit', (e) => {
             e.preventDefault();
 
+            // Validaciones de campos obligatorios
+            const equipo = document.getElementById('mnt-equipo').value.trim();
+            const marca = document.getElementById('mnt-marca').value.trim();
+            const modelo = document.getElementById('mnt-modelo').value.trim();
+            const serial = document.getElementById('mnt-serial').value.trim();
+            const pin = document.getElementById('mnt-pin').value.trim();
+            const cliente = document.getElementById('mnt-cliente').value;
+            const tecnico = document.getElementById('mnt-tecnico').value;
+            const totalMnt = parseFloat(document.getElementById('mnt-total').value || 0);
+            const fechaEntrega = document.getElementById('mnt-fecha-entrega').value;
+            const observaciones = document.getElementById('mnt-observaciones').value.trim();
+
+            if (!equipo || !marca || !modelo || !serial || !pin) {
+                alert("Todos los datos del dispositivo son obligatorios.");
+                return;
+            }
+
+            if (!cliente) {
+                alert("Debe seleccionar un cliente.");
+                return;
+            }
+
+            if (!tecnico) {
+                alert("Debe asignar un técnico (REQ008 - Asignación inicial de técnico).");
+                return;
+            }
+
+            if (totalMnt <= 0) {
+                alert("El total del mantenimiento debe ser mayor a 0.");
+                return;
+            }
+
+            if (!fechaEntrega) {
+                alert("Debe especificar la fecha estimada de entrega.");
+                return;
+            }
+
+            if (!observaciones) {
+                alert("Debe ingresar el detalle de la falla/diagnóstico.");
+                return;
+            }
+
             const mntId = document.getElementById('mnt-id').value;
             const accion = mntId ? 'editar' : 'crear';
 
@@ -833,27 +913,26 @@ class UI_SistemaMantenimiento {
                 carga: document.getElementById('dmg-carga').checked
             };
 
-            const totalMnt = parseFloat(document.getElementById('mnt-total').value || 0);
             const abono = parseFloat(document.getElementById('mnt-abono').value || 0);
 
             const mntData = {
                 idMantenimiento: mntId || undefined,
-                equipo: document.getElementById('mnt-equipo').value.trim(),
-                marca: document.getElementById('mnt-marca').value.trim(),
-                modelo: document.getElementById('mnt-modelo').value.trim(),
-                clavePin: document.getElementById('mnt-pin').value.trim(),
-                numeroSerieImei: document.getElementById('mnt-serial').value.trim(),
+                equipo: equipo,
+                marca: marca,
+                modelo: modelo,
+                clavePin: pin,
+                numeroSerieImei: serial,
                 accesorios: document.getElementById('mnt-accesorios').value.trim(),
                 tipoEquipo: document.getElementById('mnt-tipo').value,
-                cedulaCliente: document.getElementById('mnt-cliente').value,
-                tecnicoAsignado: document.getElementById('mnt-tecnico').value,
+                cedulaCliente: cliente,
+                tecnicoAsignado: tecnico,
                 daños: daños,
                 costos: {
-                    observaciones: document.getElementById('mnt-observaciones').value.trim(),
+                    observaciones: observaciones,
                     totalMantenimiento: totalMnt,
                     abono: abono,
                     saldo: totalMnt - abono,
-                    fechaEstimadaEntrega: document.getElementById('mnt-fecha-entrega').value,
+                    fechaEstimadaEntrega: fechaEntrega,
                     estado: document.getElementById('mnt-estado').value
                 }
             };

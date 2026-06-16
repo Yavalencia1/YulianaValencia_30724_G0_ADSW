@@ -376,4 +376,100 @@ class RepositorioBaseDatos {
         localStorage.setItem('notificaciones_enviadas', JSON.stringify(notificaciones.slice(0, 200)));
         return true;
     }
+
+    // ==========================================
+    // MÉTODOS DE VALIDACIÓN (REQ003, REQ004, REQ012)
+    // ==========================================
+
+    /**
+     * Valida si una cédula ya existe en el sistema como cliente (Evitar duplicados - REQ003, REQ004).
+     */
+    existeCedula(cedula) {
+        const clientes = this.obtenerClientes();
+        return clientes.some(c => c.cedula === cedula);
+    }
+
+    /**
+     * Valida si un correo ya existe como cliente (Evitar duplicados - REQ003).
+     */
+    existeCorreoCliente(correo) {
+        const clientes = this.obtenerClientes();
+        return clientes.some(c => c.correo.toLowerCase() === correo.toLowerCase());
+    }
+
+    /**
+     * Valida si un correo ya existe como técnico (Evitar duplicados - REQ012).
+     */
+    existeCorreoTecnico(correo) {
+        const tecnicos = this.obtenerTecnicos();
+        return tecnicos.some(t => t.correo.toLowerCase() === correo.toLowerCase());
+    }
+
+    /**
+     * Valida si un usuario ya existe (para login).
+     */
+    existeUsuario(usuario) {
+        const usuarios = this.obtenerUsuarios();
+        return usuarios.some(u => u.usuario === usuario);
+    }
+
+    /**
+     * Registra un evento de log con información del usuario, operación y detalles.
+     */
+    registrarLog(logData) {
+        const logs = this.obtenerLogs();
+        const nuevoLog = {
+            fecha: logData.fecha || new Date().toISOString(),
+            usuario: logData.usuario || 'Anónimo',
+            operacion: logData.operacion,
+            detalle: logData.detalle
+        };
+        logs.unshift(nuevoLog); // Insertar al inicio para ver los más nuevos primero
+        localStorage.setItem('logs', JSON.stringify(logs.slice(0, 500))); // Limitar a los últimos 500 logs
+        return true;
+    }
+
+    /**
+     * Genera un ID único para mantenimientos con prefijo MNT- (REQ005).
+     * Asegura que no exista otro ID igual en el sistema.
+     */
+    generarIdMantenimientoUnico() {
+        const mantenimientos = this.obtenerMantenimientos();
+        let nuevoId;
+        let existe;
+
+        do {
+            // Generar ID con formato MNT-XXXXXX (donde X es un dígito)
+            const numero = Math.floor(Math.random() * 999999).toString().padStart(6, '0');
+            nuevoId = `MNT-${numero}`;
+            existe = mantenimientos.some(m => m.idMantenimiento === nuevoId);
+        } while (existe);
+
+        return nuevoId;
+    }
+
+    /**
+     * Busca un mantenimiento por su ID único.
+     */
+    buscarMantenimientoPorId(idMantenimiento) {
+        const mantenimientos = this.obtenerMantenimientos();
+        return mantenimientos.find(m => m.idMantenimiento === idMantenimiento) || null;
+    }
+
+    /**
+     * Busca mantenimientos por cédula de cliente (para vistas de cliente).
+     */
+    buscarMantenimientosPorCliente(cedulaCliente) {
+        const mantenimientos = this.obtenerMantenimientos();
+        return mantenimientos.filter(m => m.cedulaCliente === cedulaCliente);
+    }
+
+    /**
+     * Busca técnicos activos (para asignación inicial - REQ008).
+     */
+    obtenerTecnicosActivos() {
+        // Todos los técnicos registrados se consideran activos
+        return this.obtenerTecnicos();
+    }
 }
+

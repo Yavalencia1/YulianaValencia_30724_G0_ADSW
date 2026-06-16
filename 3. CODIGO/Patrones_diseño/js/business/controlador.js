@@ -33,6 +33,22 @@ class ControladorReal {
                 if (!datos.cliente.nombre || !datos.cliente.cedula || !datos.cliente.correo) {
                     throw new Error("Campos obligatorios faltantes para el cliente.");
                 }
+
+                // Validación de duplicados en cédula (excepto si es edición del mismo cliente)
+                if (accion === 'crear' && this.repo.existeCedula(datos.cliente.cedula)) {
+                    throw new Error("Esta cédula de identidad ya está registrada en el sistema.");
+                }
+
+                // Validación de duplicados en correo (excepto si es edición del mismo cliente)
+                if (accion === 'crear' && this.repo.existeCorreoCliente(datos.cliente.correo)) {
+                    throw new Error("Este correo electrónico ya está registrado en el sistema.");
+                }
+
+                // Validación de formato de correo
+                if (!datos.cliente.correo.includes('@')) {
+                    throw new Error("Ingrese un correo electrónico válido.");
+                }
+
                 return this.repo.guardarCliente(datos.cliente);
                 
             case 'eliminar':
@@ -65,6 +81,22 @@ class ControladorReal {
                 if (!datos.tecnico.nombre || !datos.tecnico.correo || !datos.tecnico.especialidad) {
                     throw new Error("Campos obligatorios faltantes para el técnico.");
                 }
+
+                // Validación de duplicados en correo (excepto si es edición del mismo técnico)
+                if (accion === 'crear' && this.repo.existeCorreoTecnico(datos.tecnico.correo)) {
+                    throw new Error("Este correo electrónico ya está registrado como técnico.");
+                }
+
+                // Validación de formato de correo
+                if (!datos.tecnico.correo.includes('@')) {
+                    throw new Error("Ingrese un correo electrónico válido para el técnico.");
+                }
+
+                // Validación de especialidad no vacía
+                if (datos.tecnico.especialidad.trim().length === 0) {
+                    throw new Error("La especialidad del técnico no puede estar vacía.");
+                }
+
                 return this.repo.guardarTecnico(datos.tecnico);
 
             case 'eliminar':
@@ -75,6 +107,9 @@ class ControladorReal {
 
             case 'listar':
                 return this.repo.obtenerTecnicos();
+
+            case 'listarActivos':
+                return this.repo.obtenerTecnicosActivos();
 
             default:
                 throw new Error(`Acción CRUD de Técnico no reconocida: ${accion}`);
@@ -96,8 +131,8 @@ class ControladorReal {
                     throw new Error("Datos incompletos para registrar el mantenimiento.");
                 }
 
-                // Generar ID único si no viene
-                mntRaw.idMantenimiento = mntRaw.idMantenimiento || `MNT-${Math.floor(1000 + Math.random() * 9000)}`;
+                // Generar ID único si no viene (REQ005 - Generar ID único)
+                mntRaw.idMantenimiento = mntRaw.idMantenimiento || this.repo.generarIdMantenimientoUnico();
                 mntRaw.fechaRegistro = mntRaw.fechaRegistro || new Date().toISOString().split('T')[0];
                 mntRaw.costos = mntRaw.costos || {};
                 mntRaw.costos.estado = 'Recibido';
