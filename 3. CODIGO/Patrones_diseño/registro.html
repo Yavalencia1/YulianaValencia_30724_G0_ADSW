@@ -106,6 +106,7 @@
 
     <!-- Cargar Scripts en Orden de Dependencia -->
     <script src="js/data/repositorio.js"></script>
+    <script src="js/utils/validacion.js"></script>
     <script src="js/patterns/composite.js"></script>
     <script src="js/patterns/bridge.js"></script>
     <script src="js/business/controlador.js"></script>
@@ -153,6 +154,13 @@
 
                 if (!correo.includes('@')) {
                     errorAlert.textContent = 'Ingrese un correo válido.';
+                    errorAlert.classList.remove('d-none');
+                    return;
+                }
+
+                // Validar cédula ecuatoriana
+                if (!validarCedulaEcuatoriana(cedula)) {
+                    errorAlert.textContent = 'La cédula ecuatoriana ingresada no es válida. Debe tener 10 dígitos y cumplir con el algoritmo de validación.';
                     errorAlert.classList.remove('d-none');
                     return;
                 }
