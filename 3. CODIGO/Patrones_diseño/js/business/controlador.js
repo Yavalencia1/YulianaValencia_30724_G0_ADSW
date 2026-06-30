@@ -145,7 +145,7 @@ class ControladorReal {
                     const cliente = this.repo.buscarClientePorCedula(mnt.cedulaCliente);
                     if (cliente) {
                         // Configurar proveedor preferido o por defecto
-                        const provType = datos.proveedorNotificacion || 'WhatsApp';
+                        const provType = "Correo";
                         this.gestorNotificaciones.setProveedor(
                             provType === 'Correo' ? new ProveedorCorreo() : new ProveedorWhatsApp()
                         );
@@ -177,7 +177,7 @@ class ControladorReal {
                         // Enviar notificación por cambio de estado (Bridge)
                         const cliente = this.repo.buscarClientePorCedula(mnt.cedulaCliente);
                         if (cliente) {
-                            const provType = datos.proveedorNotificacion || 'WhatsApp';
+                            const provType = "Correo";
                             this.gestorNotificaciones.setProveedor(
                                 provType === 'Correo' ? new ProveedorCorreo() : new ProveedorWhatsApp()
                             );
@@ -219,7 +219,7 @@ class ControladorReal {
                 if (exito && estadoAnterior !== nuevoEstado) {
                     const cliente = this.repo.buscarClientePorCedula(mnt.cedulaCliente);
                     if (cliente) {
-                        const provType = datos.proveedorNotificacion || 'WhatsApp';
+                        const provType = "Correo";
                         this.gestorNotificaciones.setProveedor(
                             provType === 'Correo' ? new ProveedorCorreo() : new ProveedorWhatsApp()
                         );

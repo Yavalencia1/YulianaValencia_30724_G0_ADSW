@@ -42,19 +42,64 @@ class ProveedorWhatsApp extends IProveedorComunicaciones {
  * Implementación Concreta 2: Proveedor de Correo Electrónico
  */
 class ProveedorCorreo extends IProveedorComunicaciones {
-    enviarMensaje(destino, mensaje) {
-        console.log(`[Bridge - Correo] Enviando email a ${destino}: "${mensaje}"`);
-        
-        // Simulación: Guardamos en el registro del repositorio local
-        const repo = new RepositorioBaseDatos();
-        repo.guardarNotificacion('Correo', destino, mensaje);
-        
-        return {
-            exito: true,
-            canal: 'Correo Electrónico',
-            detalles: `Correo enviado a ${destino}`
-        };
+
+    async enviarMensaje(destino, mensaje) {
+
+        try{
+            console.log("Destino:", destino);
+            console.log("Mensaje:", mensaje);
+            await emailjs.send(
+
+                "service_0x6babk",
+
+                "template_aa48rsq",
+
+                {
+
+                    to_email: destino,
+
+                    mensaje: mensaje
+
+                }
+
+            );
+
+            const repo = new RepositorioBaseDatos();
+
+            repo.guardarNotificacion(
+                "Correo",
+                destino,
+                mensaje
+            );
+
+            return{
+
+                exito:true,
+
+                canal:"Correo",
+
+                detalles:`Correo enviado a ${destino}`
+
+            };
+
+        }catch(error){
+
+            console.error(error);
+
+            return{
+
+                exito:false,
+
+                canal:"Correo",
+
+                detalles:"No se pudo enviar el correo"
+
+            };
+
+        }
+
     }
+
 }
 
 /**
