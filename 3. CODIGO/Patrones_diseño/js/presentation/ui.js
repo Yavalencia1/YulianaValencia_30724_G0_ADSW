@@ -902,6 +902,25 @@ class UI_SistemaMantenimiento {
                 return;
             }
 
+            // Validar que la fecha de entrega no sea del día de hoy
+            const hoy = new Date();
+            const yyyy = hoy.getFullYear();
+            const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+            const dd = String(hoy.getDate()).padStart(2, '0');
+            const fechaHoyStr = `${yyyy}-${mm}-${dd}`;
+
+            if (fechaEntrega === fechaHoyStr) {
+                alert("La fecha estimada de entrega no puede ser el día de hoy.");
+                return;
+            }
+
+            // Validar que el abono (saldo abonado) no sea mayor al total del mantenimiento
+            const abono = parseFloat(document.getElementById('mnt-abono').value || 0);
+            if (abono > totalMnt) {
+                alert("El abono inicial (saldo abonado) no puede ser mayor al precio total del mantenimiento.");
+                return;
+            }
+
             if (!observaciones) {
                 alert("Debe ingresar el detalle de la falla/diagnóstico.");
                 return;
@@ -922,8 +941,6 @@ class UI_SistemaMantenimiento {
                 sonido: document.getElementById('dmg-sonido').checked,
                 carga: document.getElementById('dmg-carga').checked
             };
-
-            const abono = parseFloat(document.getElementById('mnt-abono').value || 0);
 
             const mntData = {
                 idMantenimiento: mntId || undefined,
