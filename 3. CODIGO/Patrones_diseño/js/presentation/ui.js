@@ -684,7 +684,8 @@ class UI_SistemaMantenimiento {
                 if (m.costos.estado === 'En Reparación') badgeClass = 'badge-reparacion';
                 else if (m.costos.estado === 'Listo para Entrega') badgeClass = 'badge-listo';
                 else if (m.costos.estado === 'Entregado') badgeClass = 'badge-entregado';
-
+                else if (m.costos.estado === 'Cancelado')
+                badgeClass = 'bg-danger';
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><strong>${m.idMantenimiento}</strong></td>
@@ -708,8 +709,12 @@ class UI_SistemaMantenimiento {
                                 <button class="btn btn-sm btn-outline-primary btn-editar-mnt" data-id="${m.idMantenimiento}" title="Editar ficha completa"><i class="bi bi-pencil"></i></button>
                                 <button class="btn btn-sm btn-outline-warning btn-estado-quick" data-id="${m.idMantenimiento}" title="Cambiar Estado Rápido"><i class="bi bi-arrow-repeat"></i></button>
                             ` : ''}
-                            ${sesion.rol === 'Administrador' ? `
-                                <button class="btn btn-sm btn-outline-danger btn-eliminar-mnt" data-id="${m.idMantenimiento}" title="Eliminar"><i class="bi bi-trash"></i></button>
+                            ${sesion.rol === 'Administrador' && m.costos.estado !== 'Cancelado' ? `
+                                <button class="btn btn-sm btn-outline-danger btn-cancelar-mnt"
+                                    data-id="${m.idMantenimiento}"
+                                    title="Cancelar mantenimiento">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
                             ` : ''}
                         </div>
                     </td>
@@ -778,18 +783,36 @@ class UI_SistemaMantenimiento {
                 });
             });
 
-            // Registrar eventos para eliminar
-            document.querySelectorAll('.btn-eliminar-mnt').forEach(btn => {
+            // Registrar eventos para cancelar mantenimiento
+            document.querySelectorAll('.btn-cancelar-mnt').forEach(btn => {
                 btn.addEventListener('click', () => {
+
                     const id = btn.getAttribute('data-id');
-                    if (confirm(`¿Está seguro de eliminar el mantenimiento ${id}? Esta acción no se puede deshacer.`)) {
-                        try {
-                            this.controlador.registrarMantenimiento({ accion: 'eliminar', idMantenimiento: id });
+
+                    if(confirm(`¿Desea cancelar el mantenimiento ${id}?`)){
+
+                        try{
+
+                            const mantenimiento = this.controlador.registrarMantenimiento({
+                                accion:'buscarPorId',
+                                idMantenimiento:id
+                            });
+
+                            mantenimiento.costos.estado = "Cancelado";
+
+                            this.controlador.registrarMantenimiento({
+                                accion:'editar',
+                                mantenimiento
+                            });
+
                             cargarYRenderizar();
-                        } catch (err) {
-                            alert("Error: " + err.message);
+
+                        }catch(err){
+                            alert("Error: "+err.message);
                         }
+
                     }
+
                 });
             });
         };
