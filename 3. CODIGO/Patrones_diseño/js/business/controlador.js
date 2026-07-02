@@ -232,7 +232,7 @@ class ControladorReal {
                         }
                         this.gestorNotificaciones.notificarCliente(cliente, mensaje);
                     }
-                }
+                } 
                 return mnt;
             }
 

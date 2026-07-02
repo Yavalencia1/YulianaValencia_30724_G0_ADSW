@@ -380,9 +380,10 @@ class UI_SistemaMantenimiento {
                     <td>${c.telefono}</td>
                     <td>
                         ${sesionRol === 'Administrador' ? `
-                            <button class="btn btn-sm btn-outline-primary btn-editar-cli" data-cedula="${c.cedula}"><i class="bi bi-pencil"></i></button>
-                            <button class="btn btn-sm btn-outline-danger btn-eliminar-cli" data-cedula="${c.cedula}"><i class="bi bi-trash"></i></button>
-                        ` : '<span class="text-muted">-</span>'}
+                                <button class="btn btn-sm btn-outline-primary btn-editar-cli" data-cedula="${c.cedula}">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                            ` : '<span class="text-muted">-</span>'}
                     </td>
                 `;
                 tablaBody.appendChild(tr);
@@ -408,20 +409,7 @@ class UI_SistemaMantenimiento {
                 });
             });
 
-            // Enlazar botones de eliminación
-            document.querySelectorAll('.btn-eliminar-cli').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const cedula = btn.getAttribute('data-cedula');
-                    if (confirm(`¿Está seguro de que desea eliminar al cliente con cédula ${cedula}? Se eliminará también su cuenta de usuario.`)) {
-                        try {
-                            this.controlador.gestionarCRUDCliente({ accion: 'eliminar', cedula });
-                            cargarYRenderizar();
-                        } catch (err) {
-                            alert("Error al eliminar: " + err.message);
-                        }
-                    }
-                });
-            });
+            
         };
 
         const cargarYRenderizar = () => {
@@ -529,7 +517,6 @@ class UI_SistemaMantenimiento {
                     <td>${t.telefono}</td>
                     <td>
                         <button class="btn btn-sm btn-outline-primary btn-editar-tec" data-correo="${t.correo}"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm btn-outline-danger btn-eliminar-tec" data-correo="${t.correo}"><i class="bi bi-trash"></i></button>
                     </td>
                 `;
                 tablaBody.appendChild(tr);
