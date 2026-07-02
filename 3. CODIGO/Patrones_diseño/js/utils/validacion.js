@@ -39,3 +39,19 @@ function validarCedulaEcuatoriana(cedula) {
 
     return digitoVerificadorCalculado === digitoVerificadorReal;
 }
+
+/**
+ * Valida un número de teléfono celular ecuatoriano.
+ * @param {string} telefono El número de teléfono.
+ * @returns {boolean} True si es válido, false en caso contrario.
+ */
+function validarTelefonoEcuatoriano(telefono) {
+    if (typeof telefono !== 'string') {
+        return false;
+    }
+
+    telefono = telefono.trim();
+
+    // Debe tener exactamente 10 dígitos y comenzar con 09
+    return /^09\d{8}$/.test(telefono);
+}

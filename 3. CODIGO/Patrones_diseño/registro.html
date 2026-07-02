@@ -35,7 +35,7 @@
                         <label for="reg-nombre" class="form-label small fw-semibold text-secondary">Nombre Completo</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-person"></i></span>
-                            <input type="text" class="form-control border-start-0 ps-0" id="reg-nombre" placeholder="Ej. Juan Pérez" required>
+                            <input type="text" class="form-control border-start-0 ps-0" id="reg-nombre" placeholder="Ej. Juan Pérez" maxlength="60" autocomplete="name" required>
                         </div>
                     </div>
 
@@ -43,7 +43,7 @@
                         <label for="reg-cedula" class="form-label small fw-semibold text-secondary">Cédula de Identidad</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-credit-card"></i></span>
-                            <input type="text" class="form-control border-start-0 ps-0" id="reg-cedula" placeholder="Ej. 1712345678" required>
+                            <input type="text" class="form-control border-start-0 ps-0" id="reg-cedula" placeholder="Ej. 1712345678" maxlength="10" inputmode="numeric" autocomplete="off" required>
                         </div>
                         <small class="text-muted d-block mt-1">Este será tu usuario de acceso inicial (puedes cambiarlo después)</small>
                     </div>
@@ -60,7 +60,7 @@
                         <label for="reg-telefono" class="form-label small fw-semibold text-secondary">Teléfono</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-telephone"></i></span>
-                            <input type="tel" class="form-control border-start-0 ps-0" id="reg-telefono" placeholder="Ej. 0987654321" required>
+                            <input type="tel" class="form-control border-start-0 ps-0" id="reg-telefono" placeholder="Ej. 0987654321" maxlength="10" inputmode="numeric" autocomplete="tel" required>
                         </div>
                     </div>
 
@@ -117,6 +117,28 @@
         const errorAlert = document.getElementById('registro-error');
         const exitoAlert = document.getElementById('registro-exito');
 
+        // ===============================
+        // RESTRICCIONES DE ENTRADA
+        // ===============================
+
+        const inputNombre = document.getElementById('reg-nombre');
+        inputNombre.addEventListener('input', function () {
+            this.value = this.value
+                .replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '')
+                .replace(/\s{2,}/g, ' ');
+        });
+
+        const inputCedula = document.getElementById('reg-cedula');
+        inputCedula.addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '').slice(0, 10);
+        });
+
+        const inputTelefono = document.getElementById('reg-telefono');
+        inputTelefono.addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '').slice(0, 10);
+        });
+
+
         if (registroForm) {
             registroForm.addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -158,9 +180,24 @@
                     return;
                 }
 
+                // Validar nombre
+                if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{3,60}$/.test(nombre)) {
+                    errorAlert.textContent = 'El nombre solo puede contener letras y espacios.';
+                    errorAlert.classList.remove('d-none');
+                    return;
+                }
+
+
                 // Validar cédula ecuatoriana
                 if (!validarCedulaEcuatoriana(cedula)) {
                     errorAlert.textContent = 'La cédula ecuatoriana ingresada no es válida. Debe tener 10 dígitos y cumplir con el algoritmo de validación.';
+                    errorAlert.classList.remove('d-none');
+                    return;
+                }
+
+                // Validar teléfono ecuatoriano
+                if (!validarTelefonoEcuatoriano(telefono)) {
+                    errorAlert.textContent = 'Ingrese un número de teléfono válido. Debe tener 10 dígitos y comenzar con 09.';
                     errorAlert.classList.remove('d-none');
                     return;
                 }
