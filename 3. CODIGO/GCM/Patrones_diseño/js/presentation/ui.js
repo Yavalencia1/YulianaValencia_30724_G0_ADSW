@@ -7,6 +7,165 @@ class UI_SistemaMantenimiento {
     constructor() {
         this.controlador = window.controlador;
         this.detectarYInicializarPantalla();
+        this.inyectarModalRegistrarPersonal();
+    }
+
+    /**
+     * Inyecta dinámicamente el modal y botón para que el Administrador registre nuevo personal (Admin / Técnico).
+     */
+    inyectarModalRegistrarPersonal() {
+        const sesion = this.controlador.sesionActiva;
+        if (!sesion || sesion.rol !== 'Administrador') return;
+
+        // 1. Inyectar el HTML del modal en el body si no existe
+        if (!document.getElementById('modalRegistrarPersonal')) {
+            const modalHTML = `
+                <div class="modal fade" id="modalRegistrarPersonal" tabindex="-1" aria-labelledby="modalRegistrarPersonalTitle" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header modal-header-pres" style="background-color: var(--color-pres-dark); color: white;">
+                                <h5 class="modal-title" id="modalRegistrarPersonalTitle"><i class="bi bi-person-plus-fill"></i> Registrar Personal</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form id="form-registrar-personal">
+                                <div class="modal-body p-4">
+                                    <div class="alert alert-danger d-none" id="reg-pers-error"></div>
+                                    <div class="alert alert-success d-none" id="reg-pers-exito">¡Personal registrado con éxito!</div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="pers-rol" class="form-label small fw-semibold text-secondary">Rol del Personal</label>
+                                        <select class="form-select" id="pers-rol" required>
+                                            <option value="Técnico" selected>Técnico</option>
+                                            <option value="Administrador">Administrador</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="pers-nombre" class="form-label small fw-semibold text-secondary">Nombre Completo</label>
+                                        <input type="text" class="form-control" id="pers-nombre" placeholder="ej. Carlos Gómez" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="pers-usuario" class="form-label small fw-semibold text-secondary">Nombre de Usuario (Login)</label>
+                                        <input type="text" class="form-control" id="pers-usuario" placeholder="ej. cgomez" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="pers-correo" class="form-label small fw-semibold text-secondary">Correo Electrónico</label>
+                                        <input type="email" class="form-control" id="pers-correo" placeholder="ej. carlos@mantenimiento.com" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="pers-telefono" class="form-label small fw-semibold text-secondary">Teléfono de Contacto</label>
+                                        <input type="text" class="form-control" id="pers-telefono" placeholder="ej. 0988888888" required>
+                                    </div>
+                                    <div class="mb-3" id="group-pers-especialidad">
+                                        <label for="pers-especialidad" class="form-label small fw-semibold text-secondary">Especialidad Técnica</label>
+                                        <input type="text" class="form-control" id="pers-especialidad" placeholder="ej. Dispositivos Móviles" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="pers-clave" class="form-label small fw-semibold text-secondary">Contraseña de Acceso</label>
+                                        <input type="password" class="form-control" id="pers-clave" placeholder="Mínimo 6 caracteres" required>
+                                    </div>
+                                </div>
+                                <div class="modal-footer bg-light border-top-0">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-pres" style="background-color: var(--color-pres-accent); color: white;">Guardar Colaborador</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        // 2. Vincular el botón del Sidebar para abrir el modal
+        const bootstrapModal = new bootstrap.Modal(document.getElementById('modalRegistrarPersonal'));
+        
+        // Se requiere usar event delegation por la inyección dinámica del sidebar
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('#btn-registrar-personal-sidebar');
+            if (btn) {
+                e.preventDefault();
+                
+                // Reset form
+                const form = document.getElementById('form-registrar-personal');
+                form.reset();
+                document.getElementById('reg-pers-error').classList.add('d-none');
+                document.getElementById('reg-pers-exito').classList.add('d-none');
+                document.getElementById('group-pers-especialidad').classList.remove('d-none');
+                document.getElementById('pers-especialidad').required = true;
+                
+                bootstrapModal.show();
+            }
+        });
+
+        // Ocultar/Mostrar especialidad según el rol seleccionado
+        document.getElementById('pers-rol')?.addEventListener('change', (e) => {
+            const especialidadGroup = document.getElementById('group-pers-especialidad');
+            const especialidadInput = document.getElementById('pers-especialidad');
+            if (e.target.value === 'Administrador') {
+                especialidadGroup.classList.add('d-none');
+                especialidadInput.required = false;
+            } else {
+                especialidadGroup.classList.remove('d-none');
+                especialidadInput.required = true;
+            }
+        });
+
+        // 3. Manejar el submit del formulario de registro
+        document.getElementById('form-registrar-personal')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const errorDiv = document.getElementById('reg-pers-error');
+            const exitoDiv = document.getElementById('reg-pers-exito');
+            errorDiv.classList.add('d-none');
+            exitoDiv.classList.add('d-none');
+
+            const rol = document.getElementById('pers-rol').value;
+            const nombre = document.getElementById('pers-nombre').value.trim();
+            const usuario = document.getElementById('pers-usuario').value.trim();
+            const correo = document.getElementById('pers-correo').value.trim();
+            const telefono = document.getElementById('pers-telefono').value.trim();
+            const especialidad = document.getElementById('pers-especialidad').value.trim();
+            const clave = document.getElementById('pers-clave').value;
+
+            if (clave.length < 6) {
+                errorDiv.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+                errorDiv.classList.remove('d-none');
+                return;
+            }
+
+            try {
+                // Utilizar el repositorio para realizar el registro del personal
+                this.controlador.repo.registrarClientePublico({
+                    nombre,
+                    usuario,
+                    password: clave,
+                    rol,
+                    correo,
+                    telefono,
+                    especialidad: rol === 'Técnico' ? especialidad : undefined
+                });
+
+                // Registrar log de seguridad local
+                this.controlador.repo.registrarLog({
+                    fecha: new Date().toISOString(),
+                    usuario: sesion.usuario,
+                    operacion: 'REGISTRO_PERSONAL_EXITOSO',
+                    detalle: `Administrador registró nuevo ${rol}: ${nombre} (${usuario})`
+                });
+
+                exitoDiv.classList.remove('d-none');
+                setTimeout(() => {
+                    bootstrapModal.hide();
+                    // Si estamos en la pantalla de técnicos y registramos un técnico, recargar la tabla
+                    if (window.location.pathname.includes('tecnicos.html')) {
+                        window.location.reload();
+                    }
+                }, 1500);
+
+            } catch (err) {
+                errorDiv.textContent = 'Error al registrar: ' + err.message;
+                errorDiv.classList.remove('d-none');
+            }
+        });
     }
 
     /**
@@ -50,6 +209,15 @@ class UI_SistemaMantenimiento {
                 break;
             case 'mantenimientos.html':
                 this.mostrarPantallaMantenimientos();
+                break;
+            case 'editar-cliente.html':
+                this.mostrarPantallaEditarCliente();
+                break;
+            case 'editar-tecnico.html':
+                this.mostrarPantallaEditarTecnico();
+                break;
+            case 'editar-mantenimiento.html':
+                this.mostrarPantallaEditarMantenimiento();
                 break;
             case 'estadisticas.html':
                 this.mostrarPantallaEstadisticas();
@@ -108,6 +276,9 @@ class UI_SistemaMantenimiento {
                     </li>
                     <li class="sidebar-item ${paginaActiva === 'mantenimientos.html' ? 'active' : ''}">
                         <a href="mantenimientos.html"><i class="bi bi-tools"></i> Mantenimientos</a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" id="btn-registrar-personal-sidebar"><i class="bi bi-person-plus-fill"></i> Registrar Personal</a>
                     </li>
                 `;
             } 
@@ -393,23 +564,9 @@ class UI_SistemaMantenimiento {
             document.querySelectorAll('.btn-editar-cli').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const cedula = btn.getAttribute('data-cedula');
-                    const cliente = this.controlador.gestionarCRUDCliente({ accion: 'buscar', cedula });
-                    
-                    if (cliente) {
-                        document.getElementById('cli-cedula').value = cliente.cedula;
-                        document.getElementById('cli-cedula').readOnly = true; // No permitir cambiar la cédula al editar
-                        document.getElementById('cli-nombre').value = cliente.nombre;
-                        document.getElementById('cli-correo').value = cliente.correo;
-                        document.getElementById('cli-telefono').value = cliente.telefono;
-                        document.getElementById('cli-usuario').value = cliente.usuario || '';
-                        
-                        document.getElementById('modalClienteTitle').textContent = 'Editar Cliente';
-                        bootstrapModal.show();
-                    }
+                    window.location.href = `editar-cliente.html?cedula=${cedula}`;
                 });
             });
-
-            
         };
 
         const cargarYRenderizar = () => {
@@ -436,50 +593,7 @@ class UI_SistemaMantenimiento {
 
         // Crear nuevo cliente
         document.getElementById('btn-nuevo-cliente')?.addEventListener('click', () => {
-            formCliente.reset();
-            document.getElementById('cli-cedula').readOnly = false;
-            document.getElementById('modalClienteTitle').textContent = 'Crear Cliente';
-            bootstrapModal.show();
-        });
-
-        // Enviar formulario (Crear / Editar)
-        formCliente?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const cedula = document.getElementById('cli-cedula').value.trim();
-            const nombre = document.getElementById('cli-nombre').value.trim();
-            const correo = document.getElementById('cli-correo').value.trim();
-            const telefono = document.getElementById('cli-telefono').value.trim();
-            const usuario = document.getElementById('cli-usuario').value.trim() || undefined;
-
-            // Validaciones adicionales
-            if (!cedula || !nombre || !correo || !telefono) {
-                alert("Todos los campos obligatorios deben ser completados.");
-                return;
-            }
-
-            if (!correo.includes('@')) {
-                alert("Ingrese un correo electrónico válido.");
-                return;
-            }
-
-            const esEdicion = document.getElementById('cli-cedula').readOnly;
-            const accion = esEdicion ? 'editar' : 'crear';
-
-            const cliente = {
-                cedula,
-                nombre,
-                correo,
-                telefono,
-                usuario
-            };
-
-            try {
-                this.controlador.gestionarCRUDCliente({ accion, cliente });
-                bootstrapModal.hide();
-                cargarYRenderizar();
-            } catch (err) {
-                alert("Error al guardar cliente: " + err.message);
-            }
+            window.location.href = 'editar-cliente.html';
         });
 
         cargarYRenderizar();
@@ -526,21 +640,10 @@ class UI_SistemaMantenimiento {
             document.querySelectorAll('.btn-editar-tec').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const correo = btn.getAttribute('data-correo');
-                    const lista = this.controlador.gestionarCRUDTecnico({ accion: 'listar' });
-                    const tecnico = lista.find(t => t.correo === correo);
-
-                    if (tecnico) {
-                        document.getElementById('tec-correo').value = tecnico.correo;
-                        document.getElementById('tec-correo').readOnly = true;
-                        document.getElementById('tec-nombre').value = tecnico.nombre;
-                        document.getElementById('tec-especialidad').value = tecnico.especialidad;
-                        document.getElementById('tec-telefono').value = tecnico.telefono;
-
-                        document.getElementById('modalTecnicoTitle').textContent = 'Editar Técnico';
-                        bootstrapModal.show();
-                    }
+                    window.location.href = `editar-tecnico.html?correo=${correo}`;
                 });
             });
+
 
             // Enlazar eliminar
             document.querySelectorAll('.btn-eliminar-tec').forEach(btn => {
@@ -580,52 +683,7 @@ class UI_SistemaMantenimiento {
         });
 
         document.getElementById('btn-nuevo-tecnico')?.addEventListener('click', () => {
-            formTecnico.reset();
-            document.getElementById('tec-correo').readOnly = false;
-            document.getElementById('modalTecnicoTitle').textContent = 'Crear Técnico';
-            bootstrapModal.show();
-        });
-
-        formTecnico?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const nombre = document.getElementById('tec-nombre').value.trim();
-            const especialidad = document.getElementById('tec-especialidad').value.trim();
-            const correo = document.getElementById('tec-correo').value.trim();
-            const telefono = document.getElementById('tec-telefono').value.trim();
-
-            // Validaciones adicionales
-            if (!nombre || !especialidad || !correo || !telefono) {
-                alert("Todos los campos obligatorios deben ser completados.");
-                return;
-            }
-
-            if (!correo.includes('@')) {
-                alert("Ingrese un correo electrónico válido.");
-                return;
-            }
-
-            if (especialidad.length === 0) {
-                alert("La especialidad del técnico no puede estar vacía.");
-                return;
-            }
-
-            const esEdicion = document.getElementById('tec-correo').readOnly;
-            const accion = esEdicion ? 'editar' : 'crear';
-
-            const tecnico = {
-                nombre,
-                especialidad,
-                correo,
-                telefono
-            };
-
-            try {
-                this.controlador.gestionarCRUDTecnico({ accion, tecnico });
-                bootstrapModal.hide();
-                cargarYRenderizar();
-            } catch (err) {
-                alert("Error al guardar: " + err.message);
-            }
+            window.location.href = 'editar-tecnico.html';
         });
 
         cargarYRenderizar();
@@ -745,12 +803,7 @@ class UI_SistemaMantenimiento {
             document.querySelectorAll('.btn-editar-mnt').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const id = btn.getAttribute('data-id');
-                    const mnt = this.controlador.registrarMantenimiento({ accion: 'buscarPorId', idMantenimiento: id });
-                    if (mnt) {
-                        this.cargarDatosEnFormulario(mnt);
-                        document.getElementById('modalMantenimientoTitle').textContent = `Editar Mantenimiento: ${id}`;
-                        bootstrapModal.show();
-                    }
+                    window.location.href = `editar-mantenimiento.html?id=${id}`;
                 });
             });
 
@@ -817,179 +870,81 @@ class UI_SistemaMantenimiento {
             });
         };
 
-        const cargarYRenderizar = () => {
+        const filtrarYRenderizar = () => {
             try {
-                let mantenimientos = [];
+                let todos = [];
                 if (sesion.rol === 'Cliente') {
-                    // El Proxy verificará que la cédula coincida con su sesión
-                    mantenimientos = this.controlador.registrarMantenimiento({ 
+                    todos = this.controlador.registrarMantenimiento({ 
                         accion: 'buscarPorCliente', 
                         cedulaCliente: sesion.cedula 
                     });
                 } else {
-                    mantenimientos = this.controlador.registrarMantenimiento({ accion: 'listar' });
+                    todos = this.controlador.registrarMantenimiento({ accion: 'listar' });
                 }
-                renderTable(mantenimientos);
+
+                // 1. Filtro por buscador de texto
+                const query = searchInput?.value.toLowerCase() || "";
+                
+                // 2. Filtro por estado
+                const estadoFiltro = document.getElementById('filtro-estado')?.value || "Todos";
+                
+                // 3. Filtro por mes (formato input type="month": YYYY-MM)
+                const mesFiltro = document.getElementById('filtro-mes')?.value || "";
+
+                const filtrados = todos.filter(m => {
+                    // Texto
+                    const matchesText = !query || 
+                        m.idMantenimiento.toLowerCase().includes(query) || 
+                        m.equipo.toLowerCase().includes(query) || 
+                        m.marca.toLowerCase().includes(query) ||
+                        m.costos.estado.toLowerCase().includes(query);
+
+                    // Estado
+                    const matchesEstado = estadoFiltro === "Todos" || m.costos.estado === estadoFiltro;
+
+                    // Mes (m.fechaRegistro es YYYY-MM-DD)
+                    let matchesMes = true;
+                    if (mesFiltro) {
+                        const mFecha = m.fechaRegistro; // ej: "2026-06-01"
+                        if (mFecha && mFecha.startsWith(mesFiltro)) {
+                            matchesMes = true;
+                        } else {
+                            matchesMes = false;
+                        }
+                    }
+
+                    return matchesText && matchesEstado && matchesMes;
+                });
+
+                renderTable(filtrados);
                 this.actualizarConsolaLogs();
             } catch (err) {
                 tablaBody.innerHTML = `<tr><td colspan="7" class="text-danger text-center">Error al cargar mantenimientos: ${err.message}</td></tr>`;
             }
         };
 
-        searchInput?.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase();
-            let todos = [];
-            if (sesion.rol === 'Cliente') {
-                todos = this.controlador.registrarMantenimiento({ accion: 'buscarPorCliente', cedulaCliente: sesion.cedula });
-            } else {
-                todos = this.controlador.registrarMantenimiento({ accion: 'listar' });
-            }
-            const filtrados = todos.filter(m => 
-                m.idMantenimiento.toLowerCase().includes(query) || 
-                m.equipo.toLowerCase().includes(query) || 
-                m.marca.toLowerCase().includes(query) ||
-                m.costos.estado.toLowerCase().includes(query)
-            );
-            renderTable(filtrados);
+        const cargarYRenderizar = filtrarYRenderizar;
+
+        // Escuchar cambios en los filtros
+        searchInput?.addEventListener('input', filtrarYRenderizar);
+        document.getElementById('filtro-estado')?.addEventListener('change', filtrarYRenderizar);
+        document.getElementById('filtro-mes')?.addEventListener('input', filtrarYRenderizar);
+        
+        // Botón para limpiar filtros
+        document.getElementById('btn-limpiar-filtros')?.addEventListener('click', () => {
+            if (searchInput) searchInput.value = '';
+            const selectEstado = document.getElementById('filtro-estado');
+            if (selectEstado) selectEstado.value = 'Todos';
+            const inputMes = document.getElementById('filtro-mes');
+            if (inputMes) inputMes.value = '';
+            filtrarYRenderizar();
         });
 
         // Crear nuevo
         document.getElementById('btn-nuevo-mantenimiento')?.addEventListener('click', () => {
-            formMnt.reset();
-            document.getElementById('mnt-id').value = ''; // Se autogenerará
-            document.getElementById('modalMantenimientoTitle').textContent = 'Registrar Mantenimiento';
-            bootstrapModal.show();
+            window.location.href = 'editar-mantenimiento.html';
         });
 
-        // Guardar formulario
-        formMnt?.addEventListener('submit', (e) => {
-            e.preventDefault();
-
-            // Validaciones de campos obligatorios
-            const equipo = document.getElementById('mnt-equipo').value.trim();
-            const marca = document.getElementById('mnt-marca').value.trim();
-            const modelo = document.getElementById('mnt-modelo').value.trim();
-            const serial = document.getElementById('mnt-serial').value.trim();
-            const pin = document.getElementById('mnt-pin').value.trim();
-            const cliente = document.getElementById('mnt-cliente').value;
-            const tecnico = document.getElementById('mnt-tecnico').value;
-            const totalMnt = parseFloat(document.getElementById('mnt-total').value || 0);
-            const fechaEntrega = document.getElementById('mnt-fecha-entrega').value;
-            const observaciones = document.getElementById('mnt-observaciones').value.trim();
-
-            if (!equipo || !marca || !modelo || !serial || !pin) {
-                alert("Todos los datos del dispositivo son obligatorios.");
-                return;
-            }
-
-            if (!cliente) {
-                alert("Debe seleccionar un cliente.");
-                return;
-            }
-
-            if (!tecnico) {
-                alert("Debe asignar un técnico (REQ008 - Asignación inicial de técnico).");
-                return;
-            }
-
-            if (totalMnt <= 0) {
-                alert("El total del mantenimiento debe ser mayor a 0.");
-                return;
-            }
-
-            if (!fechaEntrega) {
-                alert("Debe especificar la fecha estimada de entrega.");
-                return;
-            }
-
-            // Validar que la fecha de entrega no sea del día de hoy
-            const hoy = new Date();
-            const yyyy = hoy.getFullYear();
-            const mm = String(hoy.getMonth() + 1).padStart(2, '0');
-            const dd = String(hoy.getDate()).padStart(2, '0');
-            const fechaHoyStr = `${yyyy}-${mm}-${dd}`;
-
-            if (fechaEntrega === fechaHoyStr) {
-                alert("La fecha estimada de entrega no puede ser el día de hoy.");
-                return;
-            }
-
-            // Validar que el abono (saldo abonado) no sea mayor al total del mantenimiento
-            const abono = parseFloat(document.getElementById('mnt-abono').value || 0);
-            if (abono > totalMnt) {
-                alert("El abono inicial (saldo abonado) no puede ser mayor al precio total del mantenimiento.");
-                return;
-            }
-
-            if (!observaciones) {
-                alert("Debe ingresar el detalle de la falla/diagnóstico.");
-                return;
-            }
-
-            const mntId = document.getElementById('mnt-id').value;
-            const accion = mntId ? 'editar' : 'crear';
-
-            // Obtener el checklist de daños
-            const daños = {
-                enciende: document.getElementById('dmg-enciende').checked,
-                botones: document.getElementById('dmg-botones').checked,
-                camara: document.getElementById('dmg-camara').checked,
-                sensores: document.getElementById('dmg-sensores').checked,
-                touchId: document.getElementById('dmg-touchid').checked,
-                wifi: document.getElementById('dmg-wifi').checked,
-                senal: document.getElementById('dmg-senal').checked,
-                sonido: document.getElementById('dmg-sonido').checked,
-                carga: document.getElementById('dmg-carga').checked
-            };
-
-            const mntData = {
-                idMantenimiento: mntId || undefined,
-                equipo: equipo,
-                marca: marca,
-                modelo: modelo,
-                clavePin: pin,
-                numeroSerieImei: serial,
-                accesorios: document.getElementById('mnt-accesorios').value.trim(),
-                tipoEquipo: document.getElementById('mnt-tipo').value,
-                cedulaCliente: cliente,
-                tecnicoAsignado: tecnico,
-                daños: daños,
-                costos: {
-                    observaciones: observaciones,
-                    totalMantenimiento: totalMnt,
-                    abono: abono,
-                    saldo: totalMnt - abono,
-                    fechaEstimadaEntrega: fechaEntrega,
-                    estado: document.getElementById('mnt-estado').value
-                }
-            };
-
-            // Preguntar canal de notificación
-            const canal = confirm("¿Desea enviar notificaciones de este cambio al cliente por Correo Electrónico? (Cancelar = WhatsApp)") ? 'Correo' : 'WhatsApp';
-
-            try {
-                this.controlador.registrarMantenimiento({
-                    accion,
-                    mantenimiento: mntData,
-                    proveedorNotificacion: canal
-                });
-                bootstrapModal.hide();
-                cargarYRenderizar();
-            } catch (err) {
-                alert("Error al guardar mantenimiento: " + err.message);
-            }
-        });
-
-        // Calcular saldo dinámicamente en el formulario
-        const calcSaldo = () => {
-            const total = parseFloat(document.getElementById('mnt-total').value || 0);
-            const abono = parseFloat(document.getElementById('mnt-abono').value || 0);
-            document.getElementById('mnt-saldo').value = (total - abono).toFixed(2);
-        };
-        document.getElementById('mnt-total')?.addEventListener('input', calcSaldo);
-        document.getElementById('mnt-abono')?.addEventListener('input', calcSaldo);
-
-        cargarSelectores();
         cargarYRenderizar();
     }
 
@@ -1300,6 +1255,344 @@ class UI_SistemaMantenimiento {
                         title: { display: true, text: 'Total Facturado ($)' }
                     }
                 }
+            }
+        });
+    }
+
+    mostrarPantallaEditarCliente() {
+        const formCliente = document.getElementById('form-cliente');
+        if (!formCliente) return;
+
+        const params = new URLSearchParams(window.location.search);
+        const cedula = params.get('cedula');
+
+        const breadcrumbAction = document.getElementById('breadcrumb-action');
+        const formTitle = document.getElementById('form-title');
+
+        const esEdicion = !!cedula;
+
+        if (esEdicion) {
+            breadcrumbAction.textContent = 'Editar Cliente';
+            formTitle.textContent = `Editar Cliente: ${cedula}`;
+            document.getElementById('cli-cedula').value = cedula;
+            document.getElementById('cli-cedula').readOnly = true;
+
+            try {
+                const clientes = this.controlador.gestionarCRUDCliente({ accion: 'listar' });
+                const cliente = clientes.find(c => c.cedula === cedula);
+                if (cliente) {
+                    document.getElementById('cli-nombre').value = cliente.nombre;
+                    document.getElementById('cli-correo').value = cliente.correo;
+                    document.getElementById('cli-telefono').value = cliente.telefono;
+                    
+                    const groupUsuario = document.getElementById('group-cli-usuario');
+                    if (groupUsuario) groupUsuario.classList.add('d-none');
+                } else {
+                    alert("Cliente no encontrado.");
+                    window.location.href = 'clientes.html';
+                }
+            } catch (err) {
+                alert("Error al cargar datos del cliente: " + err.message);
+                window.location.href = 'clientes.html';
+            }
+        } else {
+            breadcrumbAction.textContent = 'Registrar Cliente';
+            formTitle.textContent = 'Registrar Nuevo Cliente';
+            document.getElementById('cli-cedula').readOnly = false;
+        }
+
+        formCliente.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const cliCedula = document.getElementById('cli-cedula').value.trim();
+            const nombre = document.getElementById('cli-nombre').value.trim();
+            const correo = document.getElementById('cli-correo').value.trim();
+            const telefono = document.getElementById('cli-telefono').value.trim();
+            const usuario = document.getElementById('cli-usuario')?.value.trim() || undefined;
+
+            if (!cliCedula || !nombre || !correo || !telefono) {
+                alert("Todos los campos obligatorios deben ser completados.");
+                return;
+            }
+
+            if (!correo.includes('@')) {
+                alert("Ingrese un correo electrónico válido.");
+                return;
+            }
+
+            const accion = esEdicion ? 'editar' : 'crear';
+            const cliente = {
+                cedula: cliCedula,
+                nombre,
+                correo,
+                telefono,
+                usuario
+            };
+
+            try {
+                this.controlador.gestionarCRUDCliente({ accion, cliente });
+                alert(esEdicion ? "Cliente actualizado con éxito." : "Cliente registrado con éxito.");
+                window.location.href = 'clientes.html';
+            } catch (err) {
+                alert("Error al guardar cliente: " + err.message);
+            }
+        });
+    }
+
+    mostrarPantallaEditarTecnico() {
+        const formTecnico = document.getElementById('form-tecnico');
+        if (!formTecnico) return;
+
+        const params = new URLSearchParams(window.location.search);
+        const correo = params.get('correo');
+
+        const breadcrumbAction = document.getElementById('breadcrumb-action');
+        const formTitle = document.getElementById('form-title');
+
+        const esEdicion = !!correo;
+
+        if (esEdicion) {
+            breadcrumbAction.textContent = 'Editar Técnico';
+            formTitle.textContent = `Editar Técnico: ${correo}`;
+            document.getElementById('tec-correo').value = correo;
+            document.getElementById('tec-correo').readOnly = true;
+
+            try {
+                const tecnicos = this.controlador.gestionarCRUDTecnico({ accion: 'listar' });
+                const tecnico = tecnicos.find(t => t.correo === correo);
+                if (tecnico) {
+                    document.getElementById('tec-nombre').value = tecnico.nombre;
+                    document.getElementById('tec-especialidad').value = tecnico.especialidad;
+                    document.getElementById('tec-telefono').value = tecnico.telefono;
+                } else {
+                    alert("Técnico no encontrado.");
+                    window.location.href = 'tecnicos.html';
+                }
+            } catch (err) {
+                alert("Error al cargar datos del técnico: " + err.message);
+                window.location.href = 'tecnicos.html';
+            }
+        } else {
+            breadcrumbAction.textContent = 'Registrar Técnico';
+            formTitle.textContent = 'Registrar Nuevo Técnico';
+            document.getElementById('tec-correo').readOnly = false;
+        }
+
+        formTecnico.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const tecCorreo = document.getElementById('tec-correo').value.trim();
+            const nombre = document.getElementById('tec-nombre').value.trim();
+            const especialidad = document.getElementById('tec-especialidad').value.trim();
+            const telefono = document.getElementById('tec-telefono').value.trim();
+
+            if (!tecCorreo || !nombre || !especialidad || !telefono) {
+                alert("Todos los campos obligatorios deben ser completados.");
+                return;
+            }
+
+            if (!tecCorreo.includes('@')) {
+                alert("Ingrese un correo electrónico válido.");
+                return;
+            }
+
+            const accion = esEdicion ? 'editar' : 'crear';
+            const tecnico = {
+                nombre,
+                especialidad,
+                correo: tecCorreo,
+                telefono
+            };
+
+            try {
+                this.controlador.gestionarCRUDTecnico({ accion, tecnico });
+                alert(esEdicion ? "Técnico actualizado con éxito." : "Técnico registrado con éxito.");
+                window.location.href = 'tecnicos.html';
+            } catch (err) {
+                alert("Error al guardar técnico: " + err.message);
+            }
+        });
+    }
+
+    mostrarPantallaEditarMantenimiento() {
+        const formMnt = document.getElementById('form-mantenimiento');
+        if (!formMnt) return;
+
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+
+        const breadcrumbAction = document.getElementById('breadcrumb-action');
+        const formTitle = document.getElementById('form-title');
+        const selectCliente = document.getElementById('mnt-cliente');
+        const selectTecnico = document.getElementById('mnt-tecnico');
+        const totalInput = document.getElementById('mnt-total');
+        const abonoInput = document.getElementById('mnt-abono');
+        const saldoInput = document.getElementById('mnt-saldo');
+
+        const sesion = this.controlador.sesionActiva;
+        const esEdicion = !!id;
+
+        const cargarSelectores = () => {
+            try {
+                const clientes = this.controlador.gestionarCRUDCliente({ accion: 'listar' });
+                selectCliente.innerHTML = '<option value="">-- Seleccionar Cliente --</option>';
+                clientes.forEach(c => {
+                    selectCliente.innerHTML += `<option value="${c.cedula}">${c.nombre} (${c.cedula})</option>`;
+                });
+
+                const tecnicos = this.controlador.gestionarCRUDTecnico({ accion: 'listar' });
+                selectTecnico.innerHTML = '<option value="">-- Seleccionar Técnico --</option>';
+                tecnicos.forEach(t => {
+                    selectTecnico.innerHTML += `<option value="${t.correo}">${t.nombre} (${t.especialidad})</option>`;
+                });
+            } catch (err) {
+                console.warn("No se pudieron cargar selectores:", err.message);
+            }
+        };
+
+        cargarSelectores();
+
+        const calcularSaldo = () => {
+            const total = parseFloat(totalInput.value || 0);
+            const abono = parseFloat(abonoInput.value || 0);
+            const saldo = Math.max(0, total - abono);
+            saldoInput.value = saldo.toFixed(2);
+        };
+
+        totalInput.addEventListener('input', calcularSaldo);
+        abonoInput.addEventListener('input', calcularSaldo);
+
+        if (esEdicion) {
+            breadcrumbAction.textContent = 'Editar Ficha';
+            formTitle.textContent = `Editar Ficha de Mantenimiento: ${id}`;
+            document.getElementById('mnt-id').value = id;
+
+            try {
+                const mnt = this.controlador.registrarMantenimiento({ accion: 'buscarPorId', idMantenimiento: id });
+                if (mnt) {
+                    document.getElementById('mnt-equipo').value = mnt.equipo;
+                    document.getElementById('mnt-marca').value = mnt.marca;
+                    document.getElementById('mnt-modelo').value = mnt.modelo;
+                    document.getElementById('mnt-tipo').value = mnt.tipoEquipo;
+                    document.getElementById('mnt-serial').value = mnt.numeroSerieImei;
+                    document.getElementById('mnt-pin').value = mnt.clavePin;
+                    document.getElementById('mnt-accesorios').value = mnt.accesorios || '';
+
+                    // Checklist
+                    document.getElementById('dmg-enciende').checked = mnt.daños.enciende;
+                    document.getElementById('dmg-botones').checked = mnt.daños.botones;
+                    document.getElementById('dmg-camara').checked = mnt.daños.camara;
+                    document.getElementById('dmg-sensores').checked = mnt.daños.sensores;
+                    document.getElementById('dmg-touchid').checked = mnt.daños.touchId;
+                    document.getElementById('dmg-wifi').checked = mnt.daños.wifi;
+                    document.getElementById('dmg-senal').checked = mnt.daños.senal;
+                    document.getElementById('dmg-sonido').checked = mnt.daños.sonido;
+                    document.getElementById('dmg-carga').checked = mnt.daños.carga;
+
+                    // Costos y asignación
+                    selectCliente.value = mnt.cedulaCliente;
+                    selectTecnico.value = mnt.tecnicoAsignado;
+                    totalInput.value = mnt.costos.totalMantenimiento;
+                    abonoInput.value = mnt.costos.abono;
+                    saldoInput.value = mnt.costos.saldo.toFixed(2);
+                    document.getElementById('mnt-fecha-entrega').value = mnt.costos.fechaEstimadaEntrega;
+                    document.getElementById('mnt-estado').value = mnt.costos.estado;
+                    document.getElementById('mnt-observaciones').value = mnt.costos.observaciones;
+                } else {
+                    alert("Ficha de mantenimiento no encontrada.");
+                    window.location.href = 'mantenimientos.html';
+                }
+            } catch (err) {
+                alert("Error al cargar datos del mantenimiento: " + err.message);
+                window.location.href = 'mantenimientos.html';
+            }
+        } else {
+            breadcrumbAction.textContent = 'Registrar Mantenimiento';
+            formTitle.textContent = 'Registrar Nuevo Mantenimiento';
+            document.getElementById('mnt-id').value = '';
+        }
+
+        formMnt.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const equipo = document.getElementById('mnt-equipo').value.trim();
+            const marca = document.getElementById('mnt-marca').value.trim();
+            const modelo = document.getElementById('mnt-modelo').value.trim();
+            const serial = document.getElementById('mnt-serial').value.trim();
+            const pin = document.getElementById('mnt-pin').value.trim();
+            const cliente = selectCliente.value;
+            const tecnico = selectTecnico.value;
+            const totalMnt = parseFloat(totalInput.value || 0);
+            const abono = parseFloat(abonoInput.value || 0);
+            const fechaEntrega = document.getElementById('mnt-fecha-entrega').value;
+            const estado = document.getElementById('mnt-estado').value;
+            const observaciones = document.getElementById('mnt-observaciones').value.trim();
+
+            if (!equipo || !marca || !modelo || !serial || !pin) {
+                alert("Todos los datos del dispositivo son obligatorios.");
+                return;
+            }
+
+            if (!cliente) {
+                alert("Debe seleccionar un cliente.");
+                return;
+            }
+
+            if (!tecnico) {
+                alert("Debe seleccionar un técnico.");
+                return;
+            }
+
+            if (totalMnt <= 0) {
+                alert("El costo total del mantenimiento debe ser mayor a 0.");
+                return;
+            }
+
+            const mntObject = {
+                idMantenimiento: id || undefined,
+                equipo,
+                marca,
+                modelo,
+                tipoEquipo: document.getElementById('mnt-tipo').value,
+                numeroSerieImei: serial,
+                clavePin: pin,
+                accesorios: document.getElementById('mnt-accesorios').value.trim(),
+                cedulaCliente: cliente,
+                tecnicoAsignado: tecnico,
+                daños: {
+                    enciende: document.getElementById('dmg-enciende').checked,
+                    botones: document.getElementById('dmg-botones').checked,
+                    camara: document.getElementById('dmg-camara').checked,
+                    sensores: document.getElementById('dmg-sensores').checked,
+                    touchId: document.getElementById('dmg-touchid').checked,
+                    wifi: document.getElementById('dmg-wifi').checked,
+                    senal: document.getElementById('dmg-senal').checked,
+                    sonido: document.getElementById('dmg-sonido').checked,
+                    carga: document.getElementById('dmg-carga').checked
+                },
+                costos: {
+                    totalMantenimiento: totalMnt,
+                    abono: abono,
+                    saldo: totalMnt - abono,
+                    estado: estado,
+                    fechaEstimadaEntrega: fechaEntrega,
+                    observaciones: observaciones
+                }
+            };
+
+            const accion = esEdicion ? 'editar' : 'crear';
+            
+            // Preguntar canal de notificación
+            const canal = confirm("¿Desea enviar notificaciones de este cambio al cliente por Correo Electrónico? (Cancelar = WhatsApp)") ? 'Correo' : 'WhatsApp';
+
+            try {
+                this.controlador.registrarMantenimiento({ 
+                    accion, 
+                    mantenimiento: mntObject,
+                    proveedorNotificacion: canal
+                });
+                alert(esEdicion ? "Mantenimiento actualizado." : "Mantenimiento registrado.");
+                window.location.href = 'mantenimientos.html';
+            } catch (err) {
+                alert("Error al guardar mantenimiento: " + err.message);
             }
         });
     }

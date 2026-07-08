@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Cliente - Sistema de Gestión de Mantenimientos</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Estilos Personalizados -->
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+    <div id="app-container">
+        <!-- Contenedor del Sidebar (Inyectado por JS) -->
+        <div id="sidebar-container"></div>
+
+        <!-- Contenido Principal -->
+        <main class="main-content">
+            <!-- Barra Superior (Inyectada por JS) -->
+            <div id="navbar-container"></div>
+
+            <!-- Migas de Pan (Breadcrumbs) -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb bg-white p-3 rounded shadow-sm">
+                    <li class="breadcrumb-item"><a href="clientes.html" class="text-decoration-none fw-semibold">Clientes</a></li>
+                    <li class="breadcrumb-item active" aria-current="page" id="breadcrumb-action">Cargando...</li>
+                </ol>
+            </nav>
+
+            <!-- Formulario Dedicado -->
+            <div class="card card-dashboard p-4 mb-4">
+                <div class="border-bottom pb-2 mb-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-dark mb-0" id="form-title">Registrar / Editar Cliente</h5>
+                    <a href="clientes.html" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
+                </div>
+
+                <form id="form-cliente">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="cli-cedula" class="form-label small fw-semibold text-secondary">Número de Cédula</label>
+                            <input type="text" class="form-control" id="cli-cedula" placeholder="ej. 1712345678" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="cli-nombre" class="form-label small fw-semibold text-secondary">Nombre Completo</label>
+                            <input type="text" class="form-control" id="cli-nombre" placeholder="ej. Juan Pérez" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="cli-correo" class="form-label small fw-semibold text-secondary">Correo Electrónico</label>
+                            <input type="email" class="form-control" id="cli-correo" placeholder="ej. juan.perez@mail.com" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="cli-telefono" class="form-label small fw-semibold text-secondary">Teléfono de Contacto</label>
+                            <input type="text" class="form-control" id="cli-telefono" placeholder="ej. 0987654321" required>
+                        </div>
+                    </div>
+                    <div class="mb-4" id="group-cli-usuario">
+                        <label for="cli-usuario" class="form-label small fw-semibold text-secondary">Usuario del Sistema (Opcional)</label>
+                        <input type="text" class="form-control" id="cli-usuario" placeholder="ej. jperez">
+                        <div class="form-text text-muted">Si se omite, se usará la cédula como usuario y contraseña por defecto.</div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                        <a href="clientes.html" class="btn btn-secondary px-4">Cancelar</a>
+                        <button type="submit" class="btn btn-pres px-4" id="btn-guardar-cliente">Guardar Cliente</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Cargar Scripts en Orden de Dependencia -->
+    <script src="js/data/repositorio.js"></script>
+    <script src="js/patterns/composite.js"></script>
+    <script src="js/patterns/bridge.js"></script>
+    <script src="js/business/controlador.js"></script>
+    <script src="js/patterns/proxy.js"></script>
+    <script src="js/presentation/ui.js"></script>
+</body>
+</html>

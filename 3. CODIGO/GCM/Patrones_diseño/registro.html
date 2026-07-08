@@ -10,11 +10,18 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <!-- Estilos Personalizados -->
     <link rel="stylesheet" href="css/estilos.css">
+    <style>
+        @media (min-width: 768px) {
+            .registro-card {
+                max-width: 750px !important;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="login-wrapper">
         <div class="container d-flex flex-column align-items-center">
-            <div class="login-card">
+            <div class="login-card registro-card">
                 <div class="login-header">
                     <div class="login-logo">
                         <i class="bi bi-tools"></i>
@@ -31,60 +38,72 @@
                 </div>
 
                 <form id="registro-form">
-                    <div class="mb-3">
-                        <label for="reg-nombre" class="form-label small fw-semibold text-secondary">Nombre Completo</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-person"></i></span>
-                            <input type="text" class="form-control border-start-0 ps-0" id="reg-nombre" placeholder="Ej. Juan Pérez" maxlength="60" autocomplete="name" required>
+                    <div class="row">
+                        <!-- Fila 1: Nombre y Nombre de Usuario -->
+                        <div class="col-md-6 mb-3">
+                            <label for="reg-nombre" class="form-label small fw-semibold text-secondary">Nombre Completo</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-person"></i></span>
+                                <input type="text" class="form-control border-start-0 ps-0" id="reg-nombre" placeholder="Ej. Juan Pérez" maxlength="60" autocomplete="name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="reg-usuario" class="form-label small fw-semibold text-secondary">Nombre de Usuario (Username)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-person-fill"></i></span>
+                                <input type="text" class="form-control border-start-0 ps-0" id="reg-usuario" placeholder="Ej. jperez" maxlength="30" required>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="reg-usuario" class="form-label small fw-semibold text-secondary">Nombre de Usuario (Username)</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-person-fill"></i></span>
-                            <input type="text" class="form-control border-start-0 ps-0" id="reg-usuario" placeholder="Ej. jperez" maxlength="30" required>
+                    <div class="row">
+                        <!-- Fila 2: Cédula y Correo -->
+                        <div class="col-md-6 mb-3">
+                            <label for="reg-cedula" class="form-label small fw-semibold text-secondary">Cédula de Identidad</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-credit-card"></i></span>
+                                <input type="text" class="form-control border-start-0 ps-0" id="reg-cedula" placeholder="Ej. 1712345678" maxlength="10" inputmode="numeric" autocomplete="off" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="reg-correo" class="form-label small fw-semibold text-secondary">Correo Electrónico</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
+                                <input type="email" class="form-control border-start-0 ps-0" id="reg-correo" placeholder="Ej. juan@mail.com" required>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="reg-cedula" class="form-label small fw-semibold text-secondary">Cédula de Identidad</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-credit-card"></i></span>
-                            <input type="text" class="form-control border-start-0 ps-0" id="reg-cedula" placeholder="Ej. 1712345678" maxlength="10" inputmode="numeric" autocomplete="off" required>
+                    <div class="row">
+                        <!-- Fila 3: Teléfono y Mensaje Informativo -->
+                        <div class="col-md-6 mb-3">
+                            <label for="reg-telefono" class="form-label small fw-semibold text-secondary">Teléfono</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-telephone"></i></span>
+                                <input type="tel" class="form-control border-start-0 ps-0" id="reg-telefono" placeholder="Ej. 0987654321" maxlength="10" inputmode="numeric" autocomplete="tel" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3 d-flex align-items-end">
+                            <p class="text-muted small mb-2"><i class="bi bi-shield-check text-success"></i> Tus datos de inicio de sesión serán guardados de forma segura.</p>
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="reg-correo" class="form-label small fw-semibold text-secondary">Correo Electrónico</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
-                            <input type="email" class="form-control border-start-0 ps-0" id="reg-correo" placeholder="Ej. juan@mail.com" required>
+                    <div class="row">
+                        <!-- Fila 4: Contraseñas -->
+                        <div class="col-md-6 mb-4">
+                            <label for="reg-clave" class="form-label small fw-semibold text-secondary">Contraseña</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-key"></i></span>
+                                <input type="password" class="form-control border-start-0 ps-0" id="reg-clave" placeholder="••••••••" required>
+                            </div>
+                            <small class="text-muted d-block mt-1">Mínimo 6 caracteres</small>
                         </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="reg-telefono" class="form-label small fw-semibold text-secondary">Teléfono</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-telephone"></i></span>
-                            <input type="tel" class="form-control border-start-0 ps-0" id="reg-telefono" placeholder="Ej. 0987654321" maxlength="10" inputmode="numeric" autocomplete="tel" required>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label for="reg-clave" class="form-label small fw-semibold text-secondary">Contraseña</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-key"></i></span>
-                            <input type="password" class="form-control border-start-0 ps-0" id="reg-clave" placeholder="••••••••" required>
-                        </div>
-                        <small class="text-muted d-block mt-1">Mínimo 6 caracteres</small>
-                    </div>
-
-                    <div class="mb-4">
-                        <label for="reg-clave-confirm" class="form-label small fw-semibold text-secondary">Confirmar Contraseña</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-key"></i></span>
-                            <input type="password" class="form-control border-start-0 ps-0" id="reg-clave-confirm" placeholder="••••••••" required>
+                        <div class="col-md-6 mb-4">
+                            <label for="reg-clave-confirm" class="form-label small fw-semibold text-secondary">Confirmar Contraseña</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-key"></i></span>
+                                <input type="password" class="form-control border-start-0 ps-0" id="reg-clave-confirm" placeholder="••••••••" required>
+                            </div>
                         </div>
                     </div>
 

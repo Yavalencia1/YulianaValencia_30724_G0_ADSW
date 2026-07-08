@@ -60,41 +60,7 @@
         </main>
     </div>
 
-    <!-- Modal para Crear/Editar Técnico -->
-    <div class="modal fade" id="modalTecnico" tabindex="-1" aria-labelledby="modalTecnicoTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header modal-header-pres">
-                    <h5 class="modal-title" id="modalTecnicoTitle">Registrar Técnico</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="form-tecnico">
-                    <div class="modal-body p-4">
-                        <div class="mb-3">
-                            <label for="tec-correo" class="form-label small fw-semibold text-secondary">Correo Electrónico</label>
-                            <input type="email" class="form-control" id="tec-correo" placeholder="ej. carlos@mantenimiento.com" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="tec-nombre" class="form-label small fw-semibold text-secondary">Nombre Completo</label>
-                            <input type="text" class="form-control" id="tec-nombre" placeholder="ej. Carlos Gómez" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="tec-especialidad" class="form-label small fw-semibold text-secondary">Especialidad Técnica</label>
-                            <input type="text" class="form-control" id="tec-especialidad" placeholder="ej. Celulares y Tablets / Computadoras" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="tec-telefono" class="form-label small fw-semibold text-secondary">Teléfono de Contacto</label>
-                            <input type="text" class="form-control" id="tec-telefono" placeholder="ej. 0988888888" required>
-                        </div>
-                    </div>
-                    <div class="modal-footer bg-light border-top-0">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-pres" id="btn-guardar-tecnico">Guardar Técnico</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Cargar Scripts en Orden de Dependencia -->
     <script src="js/data/repositorio.js"></script>

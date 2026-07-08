@@ -4,7 +4,7 @@ const usuarioRepository = require("../repositories/usuario.repository");
 const clienteRepository = require("../repositories/cliente.repository");
 
 class AuthService {
-    async register(nombre, usuario, password, rol = "Cliente", cedula = null, correo = "", telefono = "") {
+    async register(nombre, usuario, password, rol = "Cliente", cedula = null, correo = "", telefono = "", especialidad = "") {
         if (!nombre || !usuario || !password) {
             throw new Error("Todos los campos (nombre, usuario, password) son obligatorios.");
         }
@@ -14,7 +14,9 @@ class AuthService {
             throw new Error("El nombre de usuario ya está registrado.");
         }
 
-        // Si es rol Cliente, validar la cédula y registrarlo también en la tabla Cliente
+        const prisma = require("../config/prisma");
+
+        // Si es rol Cliente, registrarlo también en la tabla Cliente
         if (rol === "Cliente") {
             if (!cedula) {
                 throw new Error("La cédula es obligatoria para registrarse como cliente.");
@@ -31,6 +33,29 @@ class AuthService {
                 telefono: telefono || "",
                 correo: correo || "",
                 direccion: ""
+            });
+        }
+
+        // Si es rol Técnico, registrarlo también en la tabla Tecnico
+        if (rol === "Técnico") {
+            if (!correo) {
+                throw new Error("El correo electrónico es obligatorio para registrarse como técnico.");
+            }
+            const existingTecnico = await prisma.tecnico.findFirst({
+                where: { correo }
+            });
+            if (existingTecnico) {
+                throw new Error("Ya existe un técnico registrado con este correo.");
+            }
+
+            // Crear el técnico
+            await prisma.tecnico.create({
+                data: {
+                    nombre,
+                    especialidad: especialidad || "General",
+                    telefono: telefono || "",
+                    correo
+                }
             });
         }
 
