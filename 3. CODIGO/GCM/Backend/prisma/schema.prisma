@@ -12,6 +12,8 @@ model Usuario {
   nombre    String
   usuario   String   @unique
   password  String
+  rol       String   @default("Cliente")
+  cedula    String?
 }
 
 model Cliente {

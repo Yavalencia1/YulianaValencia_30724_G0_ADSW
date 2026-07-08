@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const usuarioRepository = require("../repositories/usuario.repository");
 
 class AuthService {
-    async register(nombre, usuario, password) {
+    async register(nombre, usuario, password, rol = "Cliente", cedula = null) {
         if (!nombre || !usuario || !password) {
             throw new Error("Todos los campos (nombre, usuario, password) son obligatorios.");
         }
@@ -17,7 +17,9 @@ class AuthService {
         const newUser = await usuarioRepository.create({
             nombre,
             usuario,
-            password: hashedPassword
+            password: hashedPassword,
+            rol,
+            cedula
         });
 
         // Retornar sin password
@@ -41,7 +43,7 @@ class AuthService {
         }
 
         const token = jwt.sign(
-            { id: user.id, usuario: user.usuario, nombre: user.nombre },
+            { id: user.id, usuario: user.usuario, nombre: user.nombre, rol: user.rol, cedula: user.cedula },
             process.env.JWT_SECRET || "fallback_secret",
             { expiresIn: "24h" }
         );
@@ -51,7 +53,9 @@ class AuthService {
             user: {
                 id: user.id,
                 usuario: user.usuario,
-                nombre: user.nombre
+                nombre: user.nombre,
+                rol: user.rol,
+                cedula: user.cedula
             }
         };
     }

@@ -21,7 +21,8 @@ async function main() {
         data: {
             nombre: "Administrador del Sistema",
             usuario: "admin",
-            password: hashAdmin
+            password: hashAdmin,
+            rol: "Administrador"
         }
     });
 
@@ -29,7 +30,8 @@ async function main() {
         data: {
             nombre: "Carlos Gómez",
             usuario: "tecnico1",
-            password: hashTec1
+            password: hashTec1,
+            rol: "Técnico"
         }
     });
 
@@ -37,7 +39,9 @@ async function main() {
         data: {
             nombre: "Juan Pérez",
             usuario: "cliente1",
-            password: hashCli1
+            password: hashCli1,
+            rol: "Cliente",
+            cedula: "1712345678"
         }
     });
 

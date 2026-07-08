@@ -1,7 +1,7 @@
 /**
  * Capa de Datos: RepositorioBaseDatos
- * Encargado de la persistencia de datos utilizando LocalStorage.
- * Aplica diseño de almacenamiento para el sistema de mantenimientos.
+ * Encargado de la persistencia de datos mediante comunicación síncrona con el Backend (PostgreSQL en Docker).
+ * Implementa el patrón Adapter para transformar respuestas de la base de datos a estructuras del frontend.
  */
 class RepositorioBaseDatos {
     constructor() {
@@ -9,339 +9,239 @@ class RepositorioBaseDatos {
     }
 
     /**
-     * Inicializa las tablas en LocalStorage si no existen y carga datos de prueba.
+     * Inicializa logs y notificaciones en LocalStorage si no existen.
      */
     initDatabase() {
-        if (!localStorage.getItem('usuarios')) {
-            const usuariosIniciales = [
-                { usuario: 'admin', clave: 'admin123', rol: 'Administrador', nombre: 'Administrador del Sistema' },
-                { usuario: 'tecnico1', clave: 'tec123', rol: 'Técnico', nombre: 'Carlos Gómez' },
-                { usuario: 'cliente1', clave: 'cli123', rol: 'Cliente', nombre: 'Juan Pérez', cedula: '1712345678' }
-            ];
-            localStorage.setItem('usuarios', JSON.stringify(usuariosIniciales));
-        }
-
-        if (!localStorage.getItem('clientes')) {
-            const clientesIniciales = [
-                { nombre: 'Juan Pérez', cedula: '1712345678', correo: 'juan.perez@mail.com', telefono: '0987654321', usuario: 'cliente1' },
-                { nombre: 'María Rodríguez', cedula: '1787654321', correo: 'maria.rod@mail.com', telefono: '0991122334', usuario: 'cliente2' },
-                { nombre: 'Sofía Martínez', cedula: '0912345678', correo: 'sofia.mtz@mail.com', telefono: '0995566778', usuario: 'cliente3' }
-            ];
-            localStorage.setItem('clientes', JSON.stringify(clientesIniciales));
-        }
-
-        if (!localStorage.getItem('tecnicos')) {
-            const tecnicosIniciales = [
-                { nombre: 'Carlos Gómez', especialidad: 'Dispositivos Móviles', correo: 'carlos@mantenimiento.com', telefono: '0988888888' },
-                { nombre: 'Diana López', especialidad: 'Computadoras y Redes', correo: 'diana@mantenimiento.com', telefono: '0977777777' }
-            ];
-            localStorage.setItem('tecnicos', JSON.stringify(tecnicosIniciales));
-        }
-
-        if (!localStorage.getItem('mantenimientos')) {
-            const mantenimientosIniciales = [
-                {
-                    idMantenimiento: 'MNT-001',
-                    fechaRegistro: '2026-06-01',
-                    equipo: 'iPhone 13 Pro',
-                    modelo: 'A2638',
-                    marca: 'Apple',
-                    clavePin: '1234',
-                    numeroSerieImei: '358942104829103',
-                    accesorios: 'Funda protectora',
-                    tipoEquipo: 'Celular',
-                    daños: {
-                        enciende: true,
-                        botones: true,
-                        camara: false,
-                        sensores: true,
-                        touchId: true,
-                        wifi: false,
-                        senal: true,
-                        sonido: true,
-                        carga: false
-                    },
-                    costos: {
-                        observaciones: 'Falla en pin de carga y módulo de cámara principal rayado. No se conecta a redes Wi-Fi.',
-                        totalMantenimiento: 150.00,
-                        abono: 50.00,
-                        saldo: 100.00,
-                        fechaEstimadaEntrega: '2026-06-05',
-                        estado: 'En Reparación'
-                    },
-                    cedulaCliente: '1712345678',
-                    tecnicoAsignado: 'carlos@mantenimiento.com'
-                },
-                {
-                    idMantenimiento: 'MNT-002',
-                    fechaRegistro: '2026-06-05',
-                    equipo: 'iPad Air 5',
-                    modelo: 'A2588',
-                    marca: 'Apple',
-                    clavePin: '9988',
-                    numeroSerieImei: 'DMPHG912Q16Y',
-                    accesorios: 'Apple Pencil',
-                    tipoEquipo: 'Tablet',
-                    daños: {
-                        enciende: true,
-                        botones: true,
-                        camara: true,
-                        sensores: true,
-                        touchId: false,
-                        wifi: true,
-                        senal: true,
-                        sonido: true,
-                        carga: true
-                    },
-                    costos: {
-                        observaciones: 'Pantalla trisada y Touch ID inoperable debido al golpe.',
-                        totalMantenimiento: 220.00,
-                        abono: 100.00,
-                        saldo: 120.00,
-                        fechaEstimadaEntrega: '2026-06-09',
-                        estado: 'Listo para Entrega'
-                    },
-                    cedulaCliente: '1712345678',
-                    tecnicoAsignado: 'carlos@mantenimiento.com'
-                },
-                {
-                    idMantenimiento: 'MNT-003',
-                    fechaRegistro: '2026-06-10',
-                    equipo: 'Laptop XPS 15',
-                    modelo: '9520',
-                    marca: 'Dell',
-                    clavePin: 'xps123',
-                    numeroSerieImei: '7X8Y9Z1',
-                    accesorios: 'Cargador tipo C de 130W',
-                    tipoEquipo: 'Laptop',
-                    daños: {
-                        enciende: false,
-                        botones: true,
-                        camara: true,
-                        sensores: true,
-                        touchId: true,
-                        wifi: true,
-                        senal: true,
-                        sonido: true,
-                        carga: true
-                    },
-                    costos: {
-                        observaciones: 'No enciende. Posible cortocircuito en placa madre después de sobretensión eléctrica.',
-                        totalMantenimiento: 350.00,
-                        abono: 0.00,
-                        saldo: 350.00,
-                        fechaEstimadaEntrega: '2026-06-15',
-                        estado: 'Recibido'
-                    },
-                    cedulaCliente: '1787654321',
-                    tecnicoAsignado: 'diana@mantenimiento.com'
-                },
-                {
-                    idMantenimiento: 'MNT-004',
-                    fechaRegistro: '2026-05-15',
-                    equipo: 'Galaxy S22 Ultra',
-                    modelo: 'SM-S908B',
-                    marca: 'Samsung',
-                    clavePin: '0000',
-                    numeroSerieImei: '357123456789123',
-                    accesorios: 'Ninguno',
-                    tipoEquipo: 'Celular',
-                    daños: {
-                        enciende: true,
-                        botones: true,
-                        camara: true,
-                        sensores: true,
-                        touchId: true,
-                        wifi: true,
-                        senal: true,
-                        sonido: true,
-                        carga: true
-                    },
-                    costos: {
-                        observaciones: 'Mantenimiento preventivo general y limpieza de parlantes.',
-                        totalMantenimiento: 45.00,
-                        abono: 45.00,
-                        saldo: 0.00,
-                        fechaEstimadaEntrega: '2026-05-16',
-                        estado: 'Entregado'
-                    },
-                    cedulaCliente: '0912345678',
-                    tecnicoAsignado: 'carlos@mantenimiento.com'
-                }
-            ];
-            localStorage.setItem('mantenimientos', JSON.stringify(mantenimientosIniciales));
-        }
-
         if (!localStorage.getItem('logs')) {
-            const logsIniciales = [
-                { fecha: new Date('2026-06-11T09:00:00').toISOString(), usuario: 'admin', operacion: 'LOGIN_EXITOSO', detalle: 'Inicio de sesión del Administrador' }
-            ];
-            localStorage.setItem('logs', JSON.stringify(logsIniciales));
+            localStorage.setItem('logs', JSON.stringify([]));
         }
-
         if (!localStorage.getItem('notificaciones_enviadas')) {
             localStorage.setItem('notificaciones_enviadas', JSON.stringify([]));
         }
     }
 
-    // ==========================================
-    // MÉTODOS REQUERIDOS POR EL DIAGRAMA UML / REQUISITOS
-    // ==========================================
-
     /**
-     * Guarda o actualiza un usuario en LocalStorage.
+     * Cliente HTTP síncrono para comunicarse con la API de Node/Express.
      */
-    guardarUsuario(usuario) {
-        const usuarios = this.obtenerUsuarios();
-        const index = usuarios.findIndex(u => u.usuario === usuario.usuario);
-        if (index >= 0) {
-            usuarios[index] = usuario;
-        } else {
-            usuarios.push(usuario);
+    apiRequest(method, endpoint, body = null) {
+        const xhr = new XMLHttpRequest();
+        const url = `http://localhost:3000/api${endpoint}`;
+        xhr.open(method, url, false); // Petición síncrona para compatibilidad con la arquitectura del frontend
+        xhr.setRequestHeader("Content-Type", "application/json");
+
+        // Adjuntar Token JWT en las cabeceras de autorización
+        const sesion = JSON.parse(localStorage.getItem('sesionActiva'));
+        if (sesion && sesion.token) {
+            xhr.setRequestHeader("Authorization", `Bearer ${sesion.token}`);
         }
-        localStorage.setItem('usuarios', JSON.stringify(usuarios));
-        return true;
-    }
 
-    /**
-     * Busca un cliente por su número de cédula.
-     */
-    buscarClientePorCedula(cedula) {
-        const clientes = this.obtenerClientes();
-        return clientes.find(c => c.cedula === cedula) || null;
-    }
-
-    /**
-     * Guarda o actualiza un mantenimiento en la base de datos local.
-     */
-    guardarMantenimiento(mantenimiento) {
-        const mantenimientos = this.obtenerMantenimientos();
-        const index = mantenimientos.findIndex(m => m.idMantenimiento === mantenimiento.idMantenimiento);
-        if (index >= 0) {
-            mantenimientos[index] = mantenimiento;
-        } else {
-            mantenimientos.push(mantenimiento);
+        try {
+            xhr.send(body ? JSON.stringify(body) : null);
+            if (xhr.status >= 200 && xhr.status < 300) {
+                const res = JSON.parse(xhr.responseText);
+                return res.ok ? res.data : null;
+            } else {
+                console.error(`Error en API ${method} ${endpoint}:`, xhr.responseText);
+                const errRes = JSON.parse(xhr.responseText || "{}");
+                throw new Error(errRes.error || `HTTP error ${xhr.status}`);
+            }
+        } catch (error) {
+            console.error(`Error de conexión a ${endpoint}:`, error);
+            throw error;
         }
-        localStorage.setItem('mantenimientos', JSON.stringify(mantenimientos));
-        return true;
     }
 
     /**
-     * Retorna estadísticas del volumen de información del sistema.
+     * Llama al servicio de login del backend.
      */
-    obtenerVolumen() {
-        return {
-            totalClientes: this.obtenerClientes().length,
-            totalTecnicos: this.obtenerTecnicos().length,
-            totalMantenimientos: this.obtenerMantenimientos().length,
-            totalLogs: this.obtenerLogs().length
-        };
+    loginUsuario(usuario, password) {
+        return this.apiRequest('POST', '/auth/login', { usuario, password });
     }
 
     // ==========================================
-    // MÉTODOS ADICIONALES PARA CRUD COMPLETO
+    // CAPA CLIENTES
     // ==========================================
-
-    obtenerUsuarios() {
-        return JSON.parse(localStorage.getItem('usuarios')) || [];
-    }
 
     obtenerClientes() {
-        return JSON.parse(localStorage.getItem('clientes')) || [];
+        return this.apiRequest('GET', '/clientes') || [];
+    }
+
+    buscarClientePorCedula(cedula) {
+        return this.apiRequest('GET', `/clientes/cedula/${cedula}`);
     }
 
     guardarCliente(cliente) {
-        const clientes = this.obtenerClientes();
-        const index = clientes.findIndex(c => c.cedula === cliente.cedula);
-        if (index >= 0) {
-            clientes[index] = cliente;
-        } else {
-            clientes.push(cliente);
-            // También crear un usuario de rol Cliente automáticamente para que pueda loguearse
-            const usuarioCliente = {
-                usuario: cliente.usuario || cliente.cedula,
-                clave: cliente.cedula, // La clave inicial es su propia cédula
-                rol: 'Cliente',
-                nombre: cliente.nombre,
-                cedula: cliente.cedula
-            };
-            this.guardarUsuario(usuarioCliente);
+        try {
+            const existente = this.buscarClientePorCedula(cliente.cedula);
+            if (existente) {
+                return this.apiRequest('PUT', `/clientes/${existente.id}`, cliente);
+            }
+        } catch (e) {
+            // Si el backend responde 404, asumimos que no existe y pasamos al POST
         }
-        localStorage.setItem('clientes', JSON.stringify(clientes));
-        return true;
+        return this.apiRequest('POST', '/clientes', cliente);
     }
 
     eliminarCliente(cedula) {
-        let clientes = this.obtenerClientes();
-        const cliente = clientes.find(c => c.cedula === cedula);
+        const cliente = this.buscarClientePorCedula(cedula);
         if (cliente) {
-            clientes = clientes.filter(c => c.cedula !== cedula);
-            localStorage.setItem('clientes', JSON.stringify(clientes));
-
-            // Eliminar su usuario correspondiente
-            let usuarios = this.obtenerUsuarios();
-            usuarios = usuarios.filter(u => u.cedula !== cedula);
-            localStorage.setItem('usuarios', JSON.stringify(usuarios));
+            this.apiRequest('DELETE', `/clientes/${cliente.id}`);
             return true;
         }
         return false;
     }
 
+    // ==========================================
+    // CAPA TÉCNICOS
+    // ==========================================
+
     obtenerTecnicos() {
-        return JSON.parse(localStorage.getItem('tecnicos')) || [];
+        return this.apiRequest('GET', '/tecnicos') || [];
     }
 
     guardarTecnico(tecnico) {
         const tecnicos = this.obtenerTecnicos();
-        const index = tecnicos.findIndex(t => t.correo === tecnico.correo);
-        if (index >= 0) {
-            tecnicos[index] = tecnico;
-        } else {
-            tecnicos.push(tecnico);
-            // También crear un usuario de rol Técnico automáticamente
-            const usuarioTecnico = {
-                usuario: tecnico.correo.split('@')[0], // nombre de usuario derivado del correo
-                clave: 'tec123', // Clave genérica para pruebas
-                rol: 'Técnico',
-                nombre: tecnico.nombre,
-                correo: tecnico.correo
-            };
-            this.guardarUsuario(usuarioTecnico);
+        const existente = tecnicos.find(t => t.correo === tecnico.correo);
+        if (existente) {
+            return this.apiRequest('PUT', `/tecnicos/${existente.id}`, tecnico);
         }
-        localStorage.setItem('tecnicos', JSON.stringify(tecnicos));
-        return true;
+        return this.apiRequest('POST', '/tecnicos', tecnico);
     }
 
     eliminarTecnico(correo) {
-        let tecnicos = this.obtenerTecnicos();
+        const tecnicos = this.obtenerTecnicos();
         const tecnico = tecnicos.find(t => t.correo === correo);
         if (tecnico) {
-            tecnicos = tecnicos.filter(t => t.correo !== correo);
-            localStorage.setItem('tecnicos', JSON.stringify(tecnicos));
-
-            // Eliminar usuario correspondiente
-            let usuarios = this.obtenerUsuarios();
-            usuarios = usuarios.filter(u => u.correo !== correo);
-            localStorage.setItem('usuarios', JSON.stringify(usuarios));
+            this.apiRequest('DELETE', `/tecnicos/${tecnico.id}`);
             return true;
         }
         return false;
     }
 
+    // ==========================================
+    // CAPA MANTENIMIENTOS
+    // ==========================================
+
     obtenerMantenimientos() {
-        return JSON.parse(localStorage.getItem('mantenimientos')) || [];
+        const sesion = JSON.parse(localStorage.getItem('sesionActiva'));
+        let mantenimientos = [];
+        if (sesion && sesion.rol === 'Cliente' && sesion.cedula) {
+            try {
+                const cliente = this.buscarClientePorCedula(sesion.cedula);
+                if (cliente) {
+                    mantenimientos = this.apiRequest('GET', `/mantenimientos/cliente/${cliente.id}`) || [];
+                }
+            } catch (err) {
+                console.error("Error al obtener mantenimientos específicos del cliente:", err);
+            }
+        } else {
+            mantenimientos = this.apiRequest('GET', '/mantenimientos') || [];
+        }
+        return mantenimientos.map(m => this.mapMantenimientoToFrontend(m));
+    }
+
+    guardarMantenimiento(mantenimiento) {
+        const cliente = this.buscarClientePorCedula(mantenimiento.cedulaCliente);
+        if (!cliente) throw new Error(`El cliente con cédula ${mantenimiento.cedulaCliente} no existe.`);
+
+        const tecnicos = this.obtenerTecnicos();
+        const tecnico = tecnicos.find(t => t.correo === mantenimiento.tecnicoAsignado);
+        if (!tecnico) throw new Error(`El técnico con correo ${mantenimiento.tecnicoAsignado} no existe.`);
+
+        const payload = {
+            tipo: mantenimiento.tipoEquipo || "General",
+            descripcion: `${mantenimiento.equipo} (${mantenimiento.marca} ${mantenimiento.modelo}). Obs: ${mantenimiento.costos?.observaciones || ""}`,
+            fecha: mantenimiento.fechaRegistro ? new Date(mantenimiento.fechaRegistro) : new Date(),
+            estado: mantenimiento.costos?.estado || "Recibido",
+            costo: parseFloat(mantenimiento.costos?.totalMantenimiento || 0),
+            clienteId: cliente.id,
+            tecnicoId: tecnico.id
+        };
+
+        // Buscar si el mantenimiento ya existe por ID
+        let existente = null;
+        try {
+            const numericId = parseInt(mantenimiento.idMantenimiento?.replace("MNT-", ""));
+            if (!isNaN(numericId)) {
+                existente = this.apiRequest('GET', `/mantenimientos/${numericId}`);
+            }
+        } catch (e) {}
+
+        if (existente) {
+            this.apiRequest('PUT', `/mantenimientos/${existente.id}`, payload);
+        } else {
+            this.apiRequest('POST', '/mantenimientos', payload);
+        }
+        return true;
     }
 
     eliminarMantenimiento(idMantenimiento) {
-        let mantenimientos = this.obtenerMantenimientos();
-        const index = mantenimientos.findIndex(m => m.idMantenimiento === idMantenimiento);
-        if (index >= 0) {
-            mantenimientos.splice(index, 1);
-            localStorage.setItem('mantenimientos', JSON.stringify(mantenimientos));
+        const numericId = parseInt(idMantenimiento.replace("MNT-", ""));
+        if (!isNaN(numericId)) {
+            this.apiRequest('DELETE', `/mantenimientos/${numericId}`);
             return true;
         }
         return false;
     }
+
+    /**
+     * Mapea un modelo de base de datos Postgres a la estructura esperada por el Frontend.
+     * Implementación del Patrón Adapter.
+     */
+    mapMantenimientoToFrontend(m) {
+        let equipo = "Dispositivo";
+        let marca = "";
+        let modelo = "";
+        let observaciones = m.descripcion;
+
+        if (m.descripcion.includes(" (") && m.descripcion.includes(")")) {
+            equipo = m.descripcion.split(" (")[0];
+            const parts = m.descripcion.split(" (")[1].split(")")[0].split(" ");
+            marca = parts[0] || "";
+            modelo = parts.slice(1).join(" ") || "";
+        }
+
+        if (m.descripcion.includes(". Obs: ")) {
+            observaciones = m.descripcion.split(". Obs: ")[1];
+        }
+
+        return {
+            idMantenimiento: `MNT-${m.id.toString().padStart(6, '0')}`,
+            fechaRegistro: m.fecha ? m.fecha.split('T')[0] : new Date().toISOString().split('T')[0],
+            equipo: equipo,
+            modelo: modelo,
+            marca: marca,
+            clavePin: "1234",
+            numeroSerieImei: "N/A",
+            accesorios: "Ninguno",
+            tipoEquipo: m.tipo,
+            daños: {
+                enciende: true,
+                botones: true,
+                camara: true,
+                sensores: true,
+                touchId: true,
+                wifi: true,
+                senal: true,
+                sonido: true,
+                carga: true
+            },
+            costos: {
+                observaciones: observaciones,
+                totalMantenimiento: m.costo,
+                abono: m.costo,
+                saldo: 0,
+                fechaEstimadaEntrega: m.fecha ? m.fecha.split('T')[0] : new Date().toISOString().split('T')[0],
+                estado: m.estado
+            },
+            cedulaCliente: m.cliente?.cedula || "",
+            tecnicoAsignado: m.tecnico?.correo || ""
+        };
+    }
+
+    // ==========================================
+    // AUDITORÍA Y REGISTROS LOCALES (LocalStorage)
+    // ==========================================
 
     obtenerLogs() {
         return JSON.parse(localStorage.getItem('logs')) || [];
@@ -355,9 +255,13 @@ class RepositorioBaseDatos {
             operacion: operacion,
             detalle: detalle
         };
-        logs.unshift(nuevoLog); // Insertar al inicio para ver los más nuevos primero
-        localStorage.setItem('logs', JSON.stringify(logs.slice(0, 500))); // Limitar a los últimos 500 logs
+        logs.unshift(nuevoLog);
+        localStorage.setItem('logs', JSON.stringify(logs.slice(0, 500)));
         return true;
+    }
+
+    registrarLog(logData) {
+        return this.guardarLog(logData.usuario, logData.operacion, logData.detalle);
     }
 
     obtenerNotificaciones() {
@@ -378,98 +282,42 @@ class RepositorioBaseDatos {
     }
 
     // ==========================================
-    // MÉTODOS DE VALIDACIÓN (REQ003, REQ004, REQ012)
+    // CAPA VALIDACIONES
     // ==========================================
 
-    /**
-     * Valida si una cédula ya existe en el sistema como cliente (Evitar duplicados - REQ003, REQ004).
-     */
     existeCedula(cedula) {
-        const clientes = this.obtenerClientes();
-        return clientes.some(c => c.cedula === cedula);
+        try {
+            const c = this.buscarClientePorCedula(cedula);
+            return !!c;
+        } catch (e) {
+            return false;
+        }
     }
 
-    /**
-     * Valida si un correo ya existe como cliente (Evitar duplicados - REQ003).
-     */
     existeCorreoCliente(correo) {
         const clientes = this.obtenerClientes();
         return clientes.some(c => c.correo.toLowerCase() === correo.toLowerCase());
     }
 
-    /**
-     * Valida si un correo ya existe como técnico (Evitar duplicados - REQ012).
-     */
     existeCorreoTecnico(correo) {
         const tecnicos = this.obtenerTecnicos();
         return tecnicos.some(t => t.correo.toLowerCase() === correo.toLowerCase());
     }
 
-    /**
-     * Valida si un usuario ya existe (para login).
-     */
-    existeUsuario(usuario) {
-        const usuarios = this.obtenerUsuarios();
-        return usuarios.some(u => u.usuario === usuario);
-    }
-
-    /**
-     * Registra un evento de log con información del usuario, operación y detalles.
-     */
-    registrarLog(logData) {
-        const logs = this.obtenerLogs();
-        const nuevoLog = {
-            fecha: logData.fecha || new Date().toISOString(),
-            usuario: logData.usuario || 'Anónimo',
-            operacion: logData.operacion,
-            detalle: logData.detalle
-        };
-        logs.unshift(nuevoLog); // Insertar al inicio para ver los más nuevos primero
-        localStorage.setItem('logs', JSON.stringify(logs.slice(0, 500))); // Limitar a los últimos 500 logs
-        return true;
-    }
-
-    /**
-     * Genera un ID único para mantenimientos con prefijo MNT- (REQ005).
-     * Asegura que no exista otro ID igual en el sistema.
-     */
     generarIdMantenimientoUnico() {
-        const mantenimientos = this.obtenerMantenimientos();
-        let nuevoId;
-        let existe;
-
-        do {
-            // Generar ID con formato MNT-XXXXXX (donde X es un dígito)
-            const numero = Math.floor(Math.random() * 999999).toString().padStart(6, '0');
-            nuevoId = `MNT-${numero}`;
-            existe = mantenimientos.some(m => m.idMantenimiento === nuevoId);
-        } while (existe);
-
-        return nuevoId;
+        return `MNT-${Math.floor(Math.random() * 999999).toString().padStart(6, '0')}`;
     }
 
-    /**
-     * Busca un mantenimiento por su ID único.
-     */
-    buscarMantenimientoPorId(idMantenimiento) {
-        const mantenimientos = this.obtenerMantenimientos();
-        return mantenimientos.find(m => m.idMantenimiento === idMantenimiento) || null;
-    }
-
-    /**
-     * Busca mantenimientos por cédula de cliente (para vistas de cliente).
-     */
-    buscarMantenimientosPorCliente(cedulaCliente) {
-        const mantenimientos = this.obtenerMantenimientos();
-        return mantenimientos.filter(m => m.cedulaCliente === cedulaCliente);
-    }
-
-    /**
-     * Busca técnicos activos (para asignación inicial - REQ008).
-     */
     obtenerTecnicosActivos() {
-        // Todos los técnicos registrados se consideran activos
         return this.obtenerTecnicos();
     }
-}
 
+    obtenerVolumen() {
+        return {
+            totalClientes: this.obtenerClientes().length,
+            totalTecnicos: this.obtenerTecnicos().length,
+            totalMantenimientos: this.obtenerMantenimientos().length,
+            totalLogs: this.obtenerLogs().length
+        };
+    }
+}

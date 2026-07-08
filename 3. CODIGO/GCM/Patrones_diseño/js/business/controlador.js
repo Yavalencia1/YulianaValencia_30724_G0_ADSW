@@ -14,9 +14,27 @@ class ControladorReal {
      * Retorna el objeto del usuario si coincide, null de lo contrario.
      */
     validarCredenciales(user, pass) {
-        const usuarios = this.repo.obtenerUsuarios();
-        const usuarioEncontrado = usuarios.find(u => u.usuario === user && u.clave === pass);
-        return usuarioEncontrado ? { ...usuarioEncontrado } : null;
+        try {
+            const data = this.repo.loginUsuario(user, pass);
+            if (data) {
+                const sesion = {
+                    usuario: data.user.usuario,
+                    rol: data.user.rol,
+                    nombre: data.user.nombre,
+                    cedula: data.user.cedula,
+                    token: data.token
+                };
+                localStorage.setItem('sesionActiva', JSON.stringify(sesion));
+                if (window.controlador) {
+                    window.controlador.sesionActiva = sesion;
+                }
+                return sesion;
+            }
+            return null;
+        } catch (error) {
+            console.error("Error en validación de credenciales:", error);
+            return null;
+        }
     }
 
     /**
