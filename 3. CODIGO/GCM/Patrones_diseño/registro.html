@@ -40,12 +40,19 @@
                     </div>
 
                     <div class="mb-3">
+                        <label for="reg-usuario" class="form-label small fw-semibold text-secondary">Nombre de Usuario (Username)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-person-fill"></i></span>
+                            <input type="text" class="form-control border-start-0 ps-0" id="reg-usuario" placeholder="Ej. jperez" maxlength="30" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
                         <label for="reg-cedula" class="form-label small fw-semibold text-secondary">Cédula de Identidad</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-credit-card"></i></span>
                             <input type="text" class="form-control border-start-0 ps-0" id="reg-cedula" placeholder="Ej. 1712345678" maxlength="10" inputmode="numeric" autocomplete="off" required>
                         </div>
-                        <small class="text-muted d-block mt-1">Este será tu usuario de acceso inicial (puedes cambiarlo después)</small>
                     </div>
 
                     <div class="mb-3">
@@ -145,6 +152,7 @@
                 
                 // Obtener datos del formulario
                 const nombre = document.getElementById('reg-nombre').value.trim();
+                const usuario = document.getElementById('reg-usuario').value.trim();
                 const cedula = document.getElementById('reg-cedula').value.trim();
                 const correo = document.getElementById('reg-correo').value.trim();
                 const telefono = document.getElementById('reg-telefono').value.trim();
@@ -156,7 +164,7 @@
                 exitoAlert.classList.add('d-none');
 
                 // Validaciones de cliente
-                if (!nombre || !cedula || !correo || !telefono || !clave) {
+                if (!nombre || !usuario || !cedula || !correo || !telefono || !clave) {
                     errorAlert.textContent = 'Todos los campos son obligatorios.';
                     errorAlert.classList.remove('d-none');
                     return;
@@ -187,7 +195,6 @@
                     return;
                 }
 
-
                 // Validar cédula ecuatoriana
                 if (!validarCedulaEcuatoriana(cedula)) {
                     errorAlert.textContent = 'La cédula ecuatoriana ingresada no es válida. Debe tener 10 dígitos y cumplir con el algoritmo de validación.';
@@ -202,51 +209,26 @@
                     return;
                 }
 
-                // Inicializar repositorio para validar duplicados
+                // Inicializar repositorio para registrar
                 try {
                     const repo = new RepositorioBaseDatos();
-                    
-                    // Validar duplicados
-                    if (repo.existeCedula(cedula)) {
-                        errorAlert.textContent = 'Esta cédula ya está registrada en el sistema.';
-                        errorAlert.classList.remove('d-none');
-                        return;
-                    }
 
-                    if (repo.existeCorreoCliente(correo)) {
-                        errorAlert.textContent = 'Este correo electrónico ya está registrado como cliente.';
-                        errorAlert.classList.remove('d-none');
-                        return;
-                    }
+                    // Registrar cliente de forma pública en el backend
+                    repo.registrarClientePublico({
+                        nombre,
+                        usuario,
+                        password: clave,
+                        cedula,
+                        correo,
+                        telefono
+                    });
 
-                    // Crear cliente
-                    const nuevoCliente = {
-                        nombre: nombre,
-                        cedula: cedula,
-                        correo: correo,
-                        telefono: telefono,
-                        usuario: cedula // Usuario inicial es la cédula
-                    };
-
-                    // Guardar cliente (esto también crea el usuario automáticamente)
-                    repo.guardarCliente(nuevoCliente);
-
-                    // Actualizar la contraseña del usuario a una más segura
-                    const usuarioCliente = {
-                        usuario: cedula,
-                        clave: clave,
-                        rol: 'Cliente',
-                        nombre: nombre,
-                        cedula: cedula
-                    };
-                    repo.guardarUsuario(usuarioCliente);
-
-                    // Registrar log de registro exitoso
+                    // Registrar log de registro exitoso de forma local
                     repo.registrarLog({
                         fecha: new Date().toISOString(),
-                        usuario: cedula,
+                        usuario: usuario,
                         operacion: 'REGISTRO_EXTERNO_EXITOSO',
-                        detalle: `Cliente ${nombre} (${cedula}) registrado exitosamente.`
+                        detalle: `Cliente ${nombre} (${usuario}) registrado en base de datos.`
                     });
 
                     // Mostrar éxito

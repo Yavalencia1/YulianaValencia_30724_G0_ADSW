@@ -58,6 +58,13 @@ class RepositorioBaseDatos {
         return this.apiRequest('POST', '/auth/login', { usuario, password });
     }
 
+    /**
+     * Registra un cliente de forma pública (no requiere token JWT).
+     */
+    registrarClientePublico(datos) {
+        return this.apiRequest('POST', '/auth/register', datos);
+    }
+
     // ==========================================
     // CAPA CLIENTES
     // ==========================================

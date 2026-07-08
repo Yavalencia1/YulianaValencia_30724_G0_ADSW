@@ -1,9 +1,10 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const usuarioRepository = require("../repositories/usuario.repository");
+const clienteRepository = require("../repositories/cliente.repository");
 
 class AuthService {
-    async register(nombre, usuario, password, rol = "Cliente", cedula = null) {
+    async register(nombre, usuario, password, rol = "Cliente", cedula = null, correo = "", telefono = "") {
         if (!nombre || !usuario || !password) {
             throw new Error("Todos los campos (nombre, usuario, password) son obligatorios.");
         }
@@ -11,6 +12,26 @@ class AuthService {
         const existingUser = await usuarioRepository.findByUsuario(usuario);
         if (existingUser) {
             throw new Error("El nombre de usuario ya está registrado.");
+        }
+
+        // Si es rol Cliente, validar la cédula y registrarlo también en la tabla Cliente
+        if (rol === "Cliente") {
+            if (!cedula) {
+                throw new Error("La cédula es obligatoria para registrarse como cliente.");
+            }
+            const existingCliente = await clienteRepository.findByCedula(cedula);
+            if (existingCliente) {
+                throw new Error("La cédula ya está registrada en el sistema.");
+            }
+
+            // Crear el cliente
+            await clienteRepository.create({
+                cedula,
+                nombre,
+                telefono: telefono || "",
+                correo: correo || "",
+                direccion: ""
+            });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
