@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imprimir Informe - Sistema de Gestión de Mantenimientos</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Estilos Personalizados -->
+    <link rel="stylesheet" href="css/estilos.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- html2pdf.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <div id="app-container">
+        <!-- Contenedor del Sidebar (Inyectado por JS) -->
+        <div id="sidebar-container"></div>
+
+        <!-- Contenido Principal -->
+        <main class="main-content">
+            <!-- Barra Superior (Inyectada por JS) -->
+            <div id="navbar-container"></div>
+
+            <!-- Migas de Pan (Breadcrumbs) -->
+            <nav aria-label="breadcrumb" class="mb-4" id="print-breadcrumbs">
+                <ol class="breadcrumb bg-white p-3 rounded shadow-sm">
+                    <li class="breadcrumb-item"><a href="mantenimientos.html" id="breadcrumb-parent" class="text-decoration-none fw-semibold">Inicio</a></li>
+                    <li class="breadcrumb-item active" aria-current="page" id="breadcrumb-action">Imprimir Reporte</li>
+                </ol>
+            </nav>
+
+            <!-- Contenedor de Impresión y Previsualización -->
+            <div class="card card-dashboard p-4 mb-4">
+                <div class="border-bottom pb-2 mb-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-dark mb-0" id="print-title"><i class="bi bi-printer-fill text-primary"></i> Configuración de Impresión - CU10</h5>
+                    <button id="btn-print-volver" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver</button>
+                </div>
+
+                <div class="modal-print-layout">
+                    <!-- Panel de Configuración (Izquierda) -->
+                    <div class="modal-print-config shadow-sm">
+                        <h6 class="fw-bold mb-3 text-dark border-bottom pb-2"><i class="bi bi-gear-fill text-primary"></i> Parámetros</h6>
+                        
+                        <!-- Destino -->
+                        <div class="mb-3">
+                            <label for="print-destino" class="form-label small fw-semibold text-secondary">Destino</label>
+                            <select class="form-select" id="print-destino" required>
+                                <option value="pdf" selected>Guardar como PDF</option>
+                                <option value="offline">[Simular] Impresora No Disponible</option>
+                                <option value="fail">[Simular] Error de Impresión</option>
+                                <option value="printer">Impresora del Sistema...</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Páginas -->
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">Páginas</label>
+                            <div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="print-paginas" id="paginas-todas" value="todas" checked>
+                                    <label class="form-check-label small" for="paginas-todas">Todo</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="print-paginas" id="paginas-impares" value="impares">
+                                    <label class="form-check-label small" for="paginas-impares">Sólo páginas impares</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="print-paginas" id="paginas-pares" value="pares">
+                                    <label class="form-check-label small" for="paginas-pares">Sólo páginas pares</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="print-paginas" id="paginas-personalizado" value="personalizado">
+                                    <label class="form-check-label small" for="paginas-personalizado">Personalizado</label>
+                                </div>
+                            </div>
+                            <input type="text" class="form-control form-control-sm mt-2 d-none" id="print-paginas-rango" placeholder="Ej. 1-2, 4">
+                        </div>
+
+                        <!-- Diseño (Horizontal / Vertical) -->
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">Diseño</label>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary flex-fill active" id="btn-design-portrait">Vertical</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary flex-fill" id="btn-design-landscape">Horizontal</button>
+                            </div>
+                        </div>
+
+                        <!-- Más opciones -->
+                        <div class="accordion accordion-flush" id="accordionPrintOptions">
+                            <div class="accordion-item bg-transparent">
+                                <h2 class="accordion-header" id="flush-headingOne">
+                                    <button class="accordion-button collapsed px-0 py-2 small fw-semibold text-secondary bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                                        <i class="bi bi-plus-circle me-1"></i> Más opciones de configuración
+                                    </button>
+                                </h2>
+                                <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordionPrintOptions">
+                                    <div class="accordion-body px-0 py-2">
+                                        <!-- Tamaño Papel -->
+                                        <div class="mb-2">
+                                            <label for="print-size" class="form-label small text-secondary">Tamaño de Papel</label>
+                                            <select class="form-select form-select-sm" id="print-size">
+                                                <option value="A4" selected>A4</option>
+                                                <option value="Legal">Legal</option>
+                                                <option value="Letter">Letter</option>
+                                                <option value="Tabloid">Tabloid</option>
+                                                <option value="A0">A0</option>
+                                                <option value="A1">A1</option>
+                                                <option value="A2">A2</option>
+                                                <option value="A3">A3</option>
+                                                <option value="A5">A5</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <!-- Páginas por hoja -->
+                                        <div class="mb-2">
+                                            <label for="print-pages-per-sheet" class="form-label small text-secondary">Páginas por hoja</label>
+                                            <select class="form-select form-select-sm" id="print-pages-per-sheet">
+                                                <option value="1" selected>1</option>
+                                                <option value="2">2</option>
+                                                <option value="4">4</option>
+                                                <option value="6">6</option>
+                                                <option value="9">9</option>
+                                                <option value="16">16</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <!-- Márgenes -->
+                                        <div class="mb-2">
+                                            <label for="print-margins" class="form-label small text-secondary">Márgenes</label>
+                                            <select class="form-select form-select-sm" id="print-margins">
+                                                <option value="default" selected>Predeterminado</option>
+                                                <option value="minimum">Mínimo</option>
+                                                <option value="none">Ninguno</option>
+                                                <option value="custom">Personalizado (12mm)</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Escala -->
+                                        <div class="mb-2">
+                                            <label for="print-scale" class="form-label small text-secondary">Escala</label>
+                                            <select class="form-select form-select-sm" id="print-scale">
+                                                <option value="default" selected>Predeterminado (100%)</option>
+                                                <option value="75">75%</option>
+                                                <option value="50">50%</option>
+                                                <option value="120">120%</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Opciones Checkboxes -->
+                                        <div class="mb-2">
+                                            <label class="form-label small text-secondary d-block">Opciones</label>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="print-opt-headers" checked>
+                                                <label class="form-check-label small" for="print-opt-headers">Encabezados y pies de página</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="print-opt-bg" checked>
+                                                <label class="form-check-label small" for="print-opt-bg">Gráficos en segundo plano</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Alertas -->
+                        <div class="alert alert-danger d-none mt-3 py-2 small" id="print-error-alert" role="alert"></div>
+                        <div class="alert alert-success d-none mt-3 py-2 small" id="print-success-alert" role="alert"></div>
+
+                        <!-- Botones de Acción -->
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="button" class="btn btn-success" id="btn-print-confirmar-guardar"><i class="bi bi-save"></i> Guardar / Imprimir</button>
+                            <button type="button" class="btn btn-outline-secondary" id="btn-print-cancelar">Cancelar</button>
+                        </div>
+                    </div>
+
+                    <!-- Previsualización Dinámica (Derecha) -->
+                    <div class="modal-print-preview-container shadow-sm">
+                        <div class="preview-nav-controls text-white mb-2 small" style="z-index: 10;">
+                            <i class="bi bi-eye-fill"></i> Vista Preliminar (Papel Simulado)
+                        </div>
+                        <div class="scale-container scale-default" id="print-scale-wrapper">
+                            <div class="print-preview-sheet preview-vertical margin-default" id="print-preview-area-target">
+                                <!-- Cabecera Simulada -->
+                                <div class="preview-header" id="print-preview-header">
+                                    <span class="fw-bold">GCM - Sistema de Gestión de Mantenimientos</span>
+                                    <span id="print-preview-date">--/--/----</span>
+                                </div>
+                                
+                                <!-- Contenido Dinámico -->
+                                <div id="print-preview-body-content" class="py-2">
+                                    <!-- Aquí se cargará dinámicamente el reporte -->
+                                </div>
+                                
+                                <!-- Pie de página Simulado -->
+                                <div class="preview-footer" id="print-preview-footer">
+                                    <span>Generado por: <span id="print-preview-user" class="fw-semibold">Usuario</span></span>
+                                    <span>Página 1 de 1</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Cargar Scripts del Sistema -->
+    <script src="js/data/repositorio.js"></script>
+    <script src="js/patterns/composite.js"></script>
+    <script src="js/patterns/bridge.js"></script>
+    <script src="js/business/controlador.js"></script>
+    <script src="js/patterns/proxy.js"></script>
+    <script src="js/presentation/ui.js"></script>
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

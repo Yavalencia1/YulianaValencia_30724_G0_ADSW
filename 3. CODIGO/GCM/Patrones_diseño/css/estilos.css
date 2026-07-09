@@ -476,3 +476,185 @@ body {
         display: block;
     }
 }
+
+/* ==========================================================================
+   CU10: Modal de Configuración de Impresión e Reportes
+   ========================================================================== */
+
+#modalImpresion .modal-dialog {
+    max-width: 95%;
+    width: 1200px;
+}
+
+.modal-print-layout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.modal-print-config {
+    flex: 1 1 350px;
+    max-width: 400px;
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: var(--border-radius-md);
+    border: 1px solid #dee2e6;
+}
+
+.modal-print-preview-container {
+    flex: 2 1 650px;
+    background-color: #6c757d;
+    padding: 20px;
+    border-radius: var(--border-radius-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    overflow-y: auto;
+    max-height: 650px;
+    position: relative;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+}
+
+.print-preview-sheet {
+    background-color: #ffffff;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+    transform-origin: top center;
+    position: relative;
+    box-sizing: border-box;
+    color: #333;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+/* Orientaciones físicas */
+.print-preview-sheet.preview-vertical {
+    max-width: 210mm;
+    min-height: 297mm; /* Proporción A4 */
+}
+
+.print-preview-sheet.preview-horizontal {
+    max-width: 297mm;
+    min-height: 210mm; /* Proporción A4 */
+}
+
+/* Márgenes de previsualización */
+.print-preview-sheet.margin-default {
+    padding: 20mm;
+}
+.print-preview-sheet.margin-minimum {
+    padding: 8mm;
+}
+.print-preview-sheet.margin-none {
+    padding: 0mm;
+}
+.print-preview-sheet.margin-custom {
+    padding: 12mm;
+}
+
+/* Escalas en previsualización */
+.scale-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    transition: all 0.3s ease;
+}
+
+.scale-container.scale-default {
+    transform: scale(1.0);
+}
+.scale-container.scale-75 {
+    transform: scale(0.75);
+}
+.scale-container.scale-50 {
+    transform: scale(0.5);
+}
+.scale-container.scale-120 {
+    transform: scale(1.2);
+}
+
+/* Cabecera y Pie de página simulados en la previsualización */
+.preview-header {
+    border-bottom: 2px solid var(--color-pres-dark);
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #777;
+}
+
+.preview-footer {
+    border-top: 1px solid #dee2e6;
+    padding-top: 8px;
+    margin-top: 25px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #888;
+}
+
+.print-preview-sheet.margin-none .preview-footer {
+    display: none;
+}
+
+/* ==========================================================================
+   CSS de Impresión Directa (window.print)
+   ========================================================================== */
+@media print {
+    /* Ocultar elementos estructurales e interactivos de la aplicación */
+    #sidebar-container, 
+    .sidebar,
+    #navbar-container, 
+    .top-navbar,
+    #print-breadcrumbs, 
+    .modal-print-config, 
+    #btn-print-volver,
+    .card-dashboard > .border-bottom,
+    .preview-nav-controls {
+        display: none !important;
+    }
+    
+    /* Adaptar el contenedor principal */
+    .main-content {
+        margin-left: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+    
+    .card-dashboard {
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .modal-print-preview-container {
+        background-color: transparent !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        max-height: none !important;
+    }
+    
+    .print-preview-sheet {
+        box-shadow: none !important;
+        border: none !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .scale-container {
+        transform: none !important;
+    }
+
+    body {
+        background: #ffffff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
+

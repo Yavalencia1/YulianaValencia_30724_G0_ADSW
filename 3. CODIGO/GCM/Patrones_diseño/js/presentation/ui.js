@@ -2,6 +2,20 @@
  * Capa de Presentación: UI_SistemaMantenimiento
  * Coordina la representación visual y los eventos de interacción del usuario.
  * Utiliza el controlador global (ProxyControlador) para procesar requerimientos.
+ * 
+ * Tareas:
+ * - [x] Inyectar html2pdf.js y botones de impresión en los archivos HTML
+ *     - [x] Modificar `mantenimientos.html` para incluir el botón y script CDN
+ *     - [x] Modificar `estadisticas.html` para incluir el botón y script CDN
+ * - [x] Agregar estilos CSS para la visualización del modal e impresión
+ *     - [x] Definir reglas en `css/estilos.css` para el modal y panel de previsualización
+ *     - [x] Configurar reglas de `@media print` para ocultar la UI e imprimir
+ * - [x] Implementar el modal y eventos de impresión en `js/presentation/ui.js`
+ *     - [x] Crear la función `inyectarModalImpresion` en `UI_SistemaMantenimiento`
+ *     - [x] Vincular los botones de impresión en las pantallas respectivas
+ *     - [x] Desarrollar la lógica de previsualización (clonación de tablas / conversión de canvas a base64 de gráficos)
+ *     - [x] Programar el botón "Guardar" para PDF y cola de impresión nativa, incluyendo simulaciones de errores
+ * - [x] Realizar pruebas manuales de funcionamiento y verificar rendimiento
  */
 class UI_SistemaMantenimiento {
     constructor() {
@@ -221,6 +235,9 @@ class UI_SistemaMantenimiento {
                 break;
             case 'estadisticas.html':
                 this.mostrarPantallaEstadisticas();
+                break;
+            case 'imprimir-informe.html':
+                this.mostrarPantallaImprimirInforme();
                 break;
             default:
                 // Si es un path local o no mapeado, pero tiene sesión
@@ -763,6 +780,7 @@ class UI_SistemaMantenimiento {
                     <td>
                         <div class="btn-group">
                             <button class="btn btn-sm btn-outline-info btn-ver-detalles" data-id="${m.idMantenimiento}" title="Ver detalles y fallas"><i class="bi bi-eye"></i></button>
+                            <button class="btn btn-sm btn-outline-secondary btn-imprimir-fila" data-id="${m.idMantenimiento}" title="Imprimir Ficha Técnica"><i class="bi bi-printer"></i></button>
                             ${sesion.rol !== 'Cliente' ? `
                                 <button class="btn btn-sm btn-outline-primary btn-editar-mnt" data-id="${m.idMantenimiento}" title="Editar ficha completa"><i class="bi bi-pencil"></i></button>
                                 <button class="btn btn-sm btn-outline-warning btn-estado-quick" data-id="${m.idMantenimiento}" title="Cambiar Estado Rápido"><i class="bi bi-arrow-repeat"></i></button>
@@ -804,6 +822,14 @@ class UI_SistemaMantenimiento {
                 btn.addEventListener('click', () => {
                     const id = btn.getAttribute('data-id');
                     window.location.href = `editar-mantenimiento.html?id=${id}`;
+                });
+            });
+
+            // Registrar eventos para imprimir fila
+            document.querySelectorAll('.btn-imprimir-fila').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = btn.getAttribute('data-id');
+                    window.location.href = `imprimir-informe.html?tipo=Mantenimiento&id=${id}`;
                 });
             });
 
@@ -1120,6 +1146,11 @@ class UI_SistemaMantenimiento {
             this.renderizarGraficoMarcas(stats.porMarca);
             this.renderizarGraficoEstados(stats.porEstado);
             this.renderizarGraficoMeses(stats.porMes);
+
+            // Botón de imprimir estadísticas
+            document.getElementById('btn-imprimir-estadisticas')?.addEventListener('click', () => {
+                window.location.href = 'imprimir-informe.html?tipo=Estadísticas';
+            });
 
             this.actualizarConsolaLogs();
         } catch (err) {
@@ -1593,6 +1624,535 @@ class UI_SistemaMantenimiento {
                 window.location.href = 'mantenimientos.html';
             } catch (err) {
                 alert("Error al guardar mantenimiento: " + err.message);
+            }
+        });
+    }
+
+    /**
+     * Lógica para imprimir-informe.html
+     */
+    mostrarPantallaImprimirInforme() {
+        const targetSheet = document.getElementById('print-preview-area-target');
+        if (!targetSheet) return;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const tipo = urlParams.get('tipo');
+        const id = urlParams.get('id');
+
+        const parentLink = document.getElementById('breadcrumb-parent');
+        const actionBreadcrumb = document.getElementById('breadcrumb-action');
+        const printTitle = document.getElementById('print-title');
+        
+        const sesion = this.controlador.sesionActiva;
+        document.getElementById('print-preview-date').textContent = new Date().toLocaleDateString();
+        document.getElementById('print-preview-user').textContent = sesion ? sesion.nombre : 'Usuario';
+
+        // Configuración de los Breadcrumbs y del título según el tipo
+        if (tipo === 'Estadísticas') {
+            parentLink.href = 'estadisticas.html';
+            parentLink.textContent = 'Estadísticas';
+            actionBreadcrumb.textContent = 'Reporte de Gestión';
+            if (printTitle) printTitle.innerHTML = `<i class="bi bi-bar-chart-line-fill text-primary"></i> Reporte de Gestión Financiera y Operativa`;
+            
+            // Cargar datos del Reporte Estadístico
+            try {
+                const stats = this.controlador.generarEstadisticas();
+                const totalMnt = stats.totales.totalEquipos;
+                const totalFacturado = `$${stats.totales.totalFacturado.toFixed(2)}`;
+                const totalAbonado = `$${stats.totales.totalAbonado.toFixed(2)}`;
+                const totalSaldos = `$${stats.totales.totalSaldos.toFixed(2)}`;
+                const promedioIngresos = `$${stats.totales.promedioIngresos.toFixed(2)}`;
+                
+                const statsHTML = `
+                    <div style="font-family: var(--font-primary); color: #333;">
+                        <div style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid var(--color-pres-dark); padding-bottom: 10px;">
+                            <h3 style="margin: 0; font-weight: bold; color: var(--color-pres-dark);">REPORTE ESTADÍSTICO DE GESTIÓN Y RENDIMIENTO</h3>
+                            <h5 style="margin: 5px 0 0 0; color: var(--color-pres-light);">GCM - Consolidado de Mantenimientos</h5>
+                        </div>
+                        
+                        <!-- KPIs en reporte -->
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 25px; gap: 10px; text-align: center;">
+                            <div style="flex: 1; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 10px;">
+                                <span style="font-size: 0.75rem; color: #777; display: block; font-weight: bold; margin-bottom: 2px;">MANTENIMIENTOS</span>
+                                <strong style="font-size: 1.25rem; color: var(--color-pres-medium);">${totalMnt}</strong>
+                            </div>
+                            <div style="flex: 1; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 10px;">
+                                <span style="font-size: 0.75rem; color: #777; display: block; font-weight: bold; margin-bottom: 2px;">FACTURACIÓN</span>
+                                <strong style="font-size: 1.25rem; color: #2a9d8f;">${totalFacturado}</strong>
+                            </div>
+                            <div style="flex: 1; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 10px;">
+                                <span style="font-size: 0.75rem; color: #777; display: block; font-weight: bold; margin-bottom: 2px;">INGRESOS EN CAJA</span>
+                                <strong style="font-size: 1.25rem; color: var(--color-pres-light);">${totalAbonado}</strong>
+                            </div>
+                            <div style="flex: 1; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 10px;">
+                                <span style="font-size: 0.75rem; color: #777; display: block; font-weight: bold; margin-bottom: 2px;">CUENTAS POR COBRAR</span>
+                                <strong style="font-size: 1.25rem; color: #d65a31;">${totalSaldos}</strong>
+                            </div>
+                        </div>
+                        
+                        <!-- Gráficos -->
+                        <div style="margin-bottom: 25px;">
+                            <h6 style="color: var(--color-pres-medium); font-weight: bold; border-bottom: 1px solid #dee2e6; padding-bottom: 5px; margin-bottom: 15px;"><i class="bi bi-tag-fill"></i> Equipos e Ingresos por Marca</h6>
+                            <div style="height: 180px; width: 100%; position: relative;">
+                                <canvas id="print-chart-marcas"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                            <div style="width: 40%;">
+                                <h6 style="color: var(--color-pres-medium); font-weight: bold; border-bottom: 1px solid #dee2e6; padding-bottom: 5px; margin-bottom: 15px;"><i class="bi bi-pie-chart-fill"></i> Distribución por Estado</h6>
+                                <div style="height: 160px; width: 100%; position: relative;">
+                                    <canvas id="print-chart-estados"></canvas>
+                                </div>
+                            </div>
+                            <div style="width: 60%;">
+                                <h6 style="color: var(--color-pres-medium); font-weight: bold; border-bottom: 1px solid #dee2e6; padding-bottom: 5px; margin-bottom: 15px;"><i class="bi bi-calendar-event"></i> Tendencia de Facturación Mensual</h6>
+                                <div style="height: 160px; width: 100%; position: relative;">
+                                    <canvas id="print-chart-meses"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('print-preview-body-content').innerHTML = statsHTML;
+                
+                // Dibujar gráficos sobre el lienzo preliminar
+                this.renderizarGraficoMarcasSección(stats.porMarca, 'print-chart-marcas');
+                this.renderizarGraficoEstadosSección(stats.porEstado, 'print-chart-estados');
+                this.renderizarGraficoMesesSección(stats.porMes, 'print-chart-meses');
+            } catch (err) {
+                document.getElementById('print-preview-body-content').innerHTML = `<div class="alert alert-danger">Error al generar reporte estadístico: ${err.message}</div>`;
+            }
+
+        } else {
+            parentLink.href = 'mantenimientos.html';
+            parentLink.textContent = 'Mantenimientos';
+            actionBreadcrumb.textContent = `Ficha Técnica: ${id || ''}`;
+            if (printTitle) printTitle.innerHTML = `<i class="bi bi-laptop-fill text-primary"></i> Ficha Técnica de Mantenimiento`;
+
+            // Cargar datos de la Ficha del Cliente
+            try {
+                const mnt = this.controlador.registrarMantenimiento({ accion: 'buscarPorId', idMantenimiento: id });
+                if (!mnt) {
+                    alert("Ficha de mantenimiento no encontrada.");
+                    window.location.href = 'mantenimientos.html';
+                    return;
+                }
+                
+                const cliente = this.controlador.repo.buscarClientePorCedula(mnt.cedulaCliente);
+                const tecnicos = this.controlador.repo.obtenerTecnicos();
+                const tecnico = tecnicos.find(t => t.correo === mnt.tecnicoAsignado);
+
+                let fallasHTML = '';
+                const fallasClaves = {
+                    enciende: 'Enciende',
+                    botones: 'Botones físicos',
+                    camara: 'Cámaras',
+                    sensores: 'Sensores de proximidad',
+                    touchId: 'Biometría (TouchID/FaceID)',
+                    wifi: 'Conexión Wi-Fi',
+                    senal: 'Señal Celular/Red',
+                    sonido: 'Audio (Parlante/Mic)',
+                    carga: 'Pin de Carga'
+                };
+
+                Object.keys(fallasClaves).forEach(key => {
+                    const icon = mnt.daños[key] 
+                        ? '<span style="color: #2a9d8f; font-weight: bold;">✓ Funciona</span>' 
+                        : '<span style="color: #d65a31; font-weight: bold;">✗ Reporta Daño</span>';
+                    
+                    fallasHTML += `
+                        <div style="width: 48%; margin-bottom: 6px; font-size: 0.85rem; display: flex; justify-content: space-between; border-bottom: 1px dashed #eee; padding-bottom: 4px;">
+                            <span style="color: #555;"><strong>${fallasClaves[key]}:</strong></span>
+                            <span>${icon}</span>
+                        </div>
+                    `;
+                });
+
+                const contentHTML = `
+                    <div style="font-family: var(--font-primary); color: #333; line-height: 1.4;">
+                        <div style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid var(--color-pres-dark); padding-bottom: 10px;">
+                            <h3 style="margin: 0; font-weight: bold; color: var(--color-pres-dark);">ORDEN DE SERVICIO / FICHA TÉCNICA</h3>
+                            <h5 style="margin: 5px 0 0 0; color: var(--color-pres-light);">Código de Ticket: ${mnt.idMantenimiento}</h5>
+                        </div>
+                        
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                            <tr>
+                                <td style="width: 50%; vertical-align: top; padding-right: 15px; border-right: 1px solid #dee2e6;">
+                                    <h5 style="color: var(--color-pres-medium); border-bottom: 1px solid #dee2e6; padding-bottom: 5px; margin-top: 0;"><i class="bi bi-laptop"></i> Datos del Dispositivo</h5>
+                                    <p style="margin: 4px 0;"><strong>Equipo:</strong> ${mnt.equipo}</p>
+                                    <p style="margin: 4px 0;"><strong>Marca / Modelo:</strong> ${mnt.marca} / ${mnt.modelo}</p>
+                                    <p style="margin: 4px 0;"><strong>Tipo:</strong> ${mnt.tipoEquipo}</p>
+                                    <p style="margin: 4px 0;"><strong>N° Serie / IMEI:</strong> ${mnt.numeroSerieImei}</p>
+                                    <p style="margin: 4px 0;"><strong>Clave / PIN:</strong> <code class="text-dark">${mnt.clavePin}</code></p>
+                                    <p style="margin: 4px 0;"><strong>Accesorios:</strong> ${mnt.accesorios || 'Ninguno'}</p>
+                                </td>
+                                <td style="width: 50%; vertical-align: top; padding-left: 15px;">
+                                    <h5 style="color: var(--color-pres-medium); border-bottom: 1px solid #dee2e6; padding-bottom: 5px; margin-top: 0;"><i class="bi bi-person"></i> Datos del Cliente</h5>
+                                    <p style="margin: 4px 0;"><strong>Cliente:</strong> ${cliente ? cliente.nombre : 'Desconocido'}</p>
+                                    <p style="margin: 4px 0;"><strong>Cédula de Identidad:</strong> ${mnt.cedulaCliente}</p>
+                                    <p style="margin: 4px 0;"><strong>Teléfono:</strong> ${cliente ? cliente.telefono : 'N/A'}</p>
+                                    <p style="margin: 4px 0;"><strong>Correo Electrónico:</strong> ${cliente ? cliente.correo : 'N/A'}</p>
+                                    <p style="margin: 4px 0;"><strong>Técnico Responsable:</strong> ${tecnico ? tecnico.nombre : mnt.tecnicoAsignado}</p>
+                                </td>
+                            </tr>
+                        </table>
+                        
+                        <h5 style="color: var(--color-pres-medium); border-bottom: 1px solid #dee2e6; padding-bottom: 5px; margin-bottom: 12px;"><i class="bi bi-check2-square"></i> Diagnóstico de Daños Inicial</h5>
+                        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; margin-bottom: 20px;">
+                            ${fallasHTML}
+                        </div>
+                        
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                            <tr>
+                                <td style="width: 55%; vertical-align: top; padding-right: 15px;">
+                                    <h5 style="color: var(--color-pres-medium); border-bottom: 1px solid #dee2e6; padding-bottom: 5px; margin-top: 0;"><i class="bi bi-chat-left-text"></i> Diagnóstico y Observaciones</h5>
+                                    <div style="background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; border-radius: 6px; font-size: 0.85rem; min-height: 100px; color: #555;">
+                                        ${mnt.costos.observaciones || 'Sin observaciones registradas en el diagnóstico inicial.'}
+                                    </div>
+                                </td>
+                                <td style="width: 45%; vertical-align: top; padding-left: 15px; background-color: #fcfcfc; border-left: 3px solid var(--color-pres-medium); padding-top: 5px;">
+                                    <h5 style="color: var(--color-pres-medium); border-bottom: 1px solid #dee2e6; padding-bottom: 5px; margin-top: 0;"><i class="bi bi-cash-coin"></i> Balance Económico</h5>
+                                    <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+                                        <span>Total Servicio:</span>
+                                        <strong>$${mnt.costos.totalMantenimiento.toFixed(2)}</strong>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; margin: 5px 0; color: #2a9d8f;">
+                                        <span>Abonado a Caja:</span>
+                                        <strong>$${mnt.costos.abono.toFixed(2)}</strong>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; margin: 5px 0; color: #d65a31; border-top: 1px solid #dee2e6; padding-top: 6px; font-size: 1.05rem;">
+                                        <span>Saldo Pendiente:</span>
+                                        <strong>$${mnt.costos.saldo.toFixed(2)}</strong>
+                                    </div>
+                                    <div style="margin-top: 15px; font-size: 0.82rem; border-top: 1px solid #eee; padding-top: 10px;">
+                                        <p style="margin: 2px 0;"><strong>Fecha Registro:</strong> ${mnt.fechaRegistro}</p>
+                                        <p style="margin: 2px 0;"><strong>Fecha Estimada Entrega:</strong> ${mnt.costos.fechaEstimadaEntrega || 'No configurada'}</p>
+                                        <p style="margin: 2px 0;"><strong>Estado del Mantenimiento:</strong> <span class="badge bg-secondary">${mnt.costos.estado}</span></p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                        
+                        <div style="margin-top: 60px; display: flex; justify-content: space-around; text-align: center;">
+                            <div style="width: 40%;">
+                                <div style="border-top: 1px solid #333; margin-top: 30px; padding-top: 5px; font-size: 0.8rem; font-weight: bold; color: #555;">
+                                    Firma Técnico Encargado
+                                </div>
+                            </div>
+                            <div style="width: 40%;">
+                                <div style="border-top: 1px solid #333; margin-top: 30px; padding-top: 5px; font-size: 0.8rem; font-weight: bold; color: #555;">
+                                    Firma de Conformidad Cliente
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('print-preview-body-content').innerHTML = contentHTML;
+            } catch (err) {
+                document.getElementById('print-preview-body-content').innerHTML = `<div class="alert alert-danger">Error al generar ficha técnica: ${err.message}</div>`;
+            }
+        }
+
+        // Bind interactive events of print settings page
+        // Destino selector
+        document.getElementById('print-destino').addEventListener('change', () => {
+            document.getElementById('print-error-alert').classList.add('d-none');
+            document.getElementById('print-success-alert').classList.add('d-none');
+        });
+
+        // Páginas radio selections
+        document.getElementsByName('print-paginas').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const rangoInput = document.getElementById('print-paginas-rango');
+                if (e.target.id === 'paginas-personalizado') {
+                    rangoInput.classList.remove('d-none');
+                    rangoInput.focus();
+                } else {
+                    rangoInput.classList.add('d-none');
+                }
+            });
+        });
+
+        // Diseño Portrait / Landscape
+        const btnPortrait = document.getElementById('btn-design-portrait');
+        const btnLandscape = document.getElementById('btn-design-landscape');
+
+        btnPortrait.addEventListener('click', () => {
+            btnPortrait.classList.add('active');
+            btnLandscape.classList.remove('active');
+            targetSheet.classList.remove('preview-horizontal');
+            targetSheet.classList.add('preview-vertical');
+        });
+
+        btnLandscape.addEventListener('click', () => {
+            btnLandscape.classList.add('active');
+            btnPortrait.classList.remove('active');
+            targetSheet.classList.remove('preview-vertical');
+            targetSheet.classList.add('preview-horizontal');
+        });
+
+        // Márgenes dropdown
+        document.getElementById('print-margins').addEventListener('change', (e) => {
+            const marginVal = e.target.value;
+            targetSheet.classList.remove('margin-default', 'margin-minimum', 'margin-none', 'margin-custom');
+            targetSheet.classList.add(`margin-${marginVal}`);
+        });
+
+        // Escala dropdown
+        document.getElementById('print-scale').addEventListener('change', (e) => {
+            const scaleVal = e.target.value;
+            const scaleWrapper = document.getElementById('print-scale-wrapper');
+            scaleWrapper.classList.remove('scale-default', 'scale-75', 'scale-50', 'scale-120');
+            scaleWrapper.classList.add(`scale-${scaleVal}`);
+        });
+
+        // Opciones checkbox headers y background graphics
+        const cbHeaders = document.getElementById('print-opt-headers');
+        const headerDiv = document.getElementById('print-preview-header');
+        const footerDiv = document.getElementById('print-preview-footer');
+
+        cbHeaders.addEventListener('change', () => {
+            if (cbHeaders.checked) {
+                headerDiv.classList.remove('d-none');
+                footerDiv.classList.remove('d-none');
+            } else {
+                headerDiv.classList.add('d-none');
+                footerDiv.classList.add('d-none');
+            }
+        });
+
+        // Botón Cancelar redirecciona de vuelta a la página correspondiente
+        const btnCancelar = document.getElementById('btn-print-cancelar');
+        const btnVolver = document.getElementById('btn-print-volver');
+        const returnUrl = tipo === 'Estadísticas' ? 'estadisticas.html' : 'mantenimientos.html';
+        
+        const goBack = () => {
+            window.location.href = returnUrl;
+        };
+        btnCancelar.addEventListener('click', goBack);
+        btnVolver.addEventListener('click', goBack);
+
+        // Botón Guardar / Imprimir
+        const btnConfirmar = document.getElementById('btn-print-confirmar-guardar');
+        const errAlert = document.getElementById('print-error-alert');
+        const succAlert = document.getElementById('print-success-alert');
+
+        btnConfirmar.addEventListener('click', () => {
+            const startTime = performance.now();
+            const destino = document.getElementById('print-destino').value;
+            const isLandscape = btnLandscape.classList.contains('active');
+            
+            errAlert.classList.add('d-none');
+            succAlert.classList.add('d-none');
+            
+            // Simular carga de procesamiento
+            btnConfirmar.disabled = true;
+            btnConfirmar.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...`;
+            
+            setTimeout(() => {
+                // EXCEPCIÓN: Impresora No Disponible
+                if (destino === 'offline') {
+                    btnConfirmar.disabled = false;
+                    btnConfirmar.innerHTML = `<i class="bi bi-save"></i> Guardar / Imprimir`;
+                    errAlert.textContent = "Impresora no disponible. Verifique la conexión o seleccione otra impresora";
+                    errAlert.classList.remove('d-none');
+                    return;
+                }
+                
+                // EXCEPCIÓN: Fallo de impresión
+                if (destino === 'fail') {
+                    btnConfirmar.disabled = false;
+                    btnConfirmar.innerHTML = `<i class="bi bi-save"></i> Guardar / Imprimir`;
+                    errAlert.textContent = "Error en la impresión. Intente nuevamente o seleccione otra impresora";
+                    errAlert.classList.remove('d-none');
+                    return;
+                }
+                
+                // SECUENCIA NORMAL: PDF
+                if (destino === 'pdf') {
+                    const opt = {
+                        margin:       10,
+                        filename:     `Reporte_${tipo || 'Mantenimiento'}_${new Date().toISOString().slice(0, 10)}.pdf`,
+                        image:        { type: 'jpeg', quality: 0.98 },
+                        html2canvas:  { scale: 2, useCORS: true },
+                        jsPDF:        { unit: 'mm', format: 'a4', orientation: isLandscape ? 'landscape' : 'portrait' }
+                    };
+                    
+                    html2pdf().set(opt).from(targetSheet).save()
+                        .then(() => {
+                            const endTime = performance.now();
+                            const elapsedSec = ((endTime - startTime) / 1000).toFixed(2);
+                            
+                            btnConfirmar.disabled = false;
+                            btnConfirmar.innerHTML = `<i class="bi bi-save"></i> Guardar / Imprimir`;
+                            
+                            succAlert.textContent = `Reporte exportado con éxito en ${elapsedSec}s.`;
+                            succAlert.classList.remove('d-none');
+                            
+                            // Registrar log de auditoría
+                            this.controlador.repo.registrarLog({
+                                fecha: new Date().toISOString(),
+                                usuario: sesion ? sesion.usuario : 'Anónimo',
+                                operacion: 'EXPORTAR_REPORTE_PDF',
+                                detalle: `Reporte de ${tipo || 'Mantenimiento'} exportado a PDF correctamente en ${elapsedSec}s.`
+                            });
+                            this.actualizarConsolaLogs();
+                            
+                            setTimeout(() => goBack(), 1500);
+                        })
+                        .catch(err => {
+                            btnConfirmar.disabled = false;
+                            btnConfirmar.innerHTML = `<i class="bi bi-save"></i> Guardar / Imprimir`;
+                            errAlert.textContent = "Error al exportar PDF: " + err.message;
+                            errAlert.classList.remove('d-none');
+                        });
+                }
+                
+                // SECUENCIA NORMAL: Impresora nativa
+                if (destino === 'printer') {
+                    btnConfirmar.disabled = false;
+                    btnConfirmar.innerHTML = `<i class="bi bi-save"></i> Guardar / Imprimir`;
+                    
+                    // Disparar diálogo de impresión nativo del navegador
+                    window.print();
+                    
+                    // Registrar log de auditoría
+                    this.controlador.repo.registrarLog({
+                        fecha: new Date().toISOString(),
+                        usuario: sesion ? sesion.usuario : 'Anónimo',
+                        operacion: 'IMPRIMIR_REPORTE',
+                        detalle: `Reporte de ${tipo || 'Mantenimiento'} enviado a cola de impresión.`
+                    });
+                    this.actualizarConsolaLogs();
+                    
+                    setTimeout(() => goBack(), 1000);
+                }
+            }, 600);
+        });
+    }
+
+    renderizarGraficoMarcasSección(datosMarca, canvasId) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+
+        const labels = datosMarca.map(d => d.marca);
+        const data = datosMarca.map(d => d.cantidad);
+        const revenues = datosMarca.map(d => d.facturado);
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Equipos Reparados',
+                        data: data,
+                        backgroundColor: '#457b9d',
+                        borderRadius: 5,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Ingresos ($)',
+                        data: revenues,
+                        backgroundColor: '#2a9d8f',
+                        borderRadius: 5,
+                        yAxisID: 'y1',
+                        type: 'line',
+                        borderColor: '#1b4332',
+                        borderWidth: 2,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false, // Desactivar animación para captura instantánea / impresión limpia
+                plugins: {
+                    legend: { position: 'top' }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'Cantidad' }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        title: { display: true, text: 'Ingresos ($)' }
+                    }
+                }
+            }
+        });
+    }
+
+    renderizarGraficoEstadosSección(datosEstado, canvasId) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+
+        const labels = datosEstado.map(d => d.estado);
+        const data = datosEstado.map(d => d.cantidad);
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: [
+                        '#e2e3e5',
+                        '#f4a261',
+                        '#a8dadc',
+                        '#2a9d8f'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+
+    renderizarGraficoMesesSección(datosMes, canvasId) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+
+        const labels = datosMes.map(d => d.mes);
+        const revenues = datosMes.map(d => d.facturado);
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Facturación Mensual ($)',
+                    data: revenues,
+                    borderColor: '#e76f51',
+                    backgroundColor: 'rgba(231, 111, 81, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#d65a31',
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                plugins: {
+                    legend: { display: false }
+                }
             }
         });
     }
