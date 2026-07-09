@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1783588882427" clover="3.2.0">
-  <project timestamp="1783588882427" name="All files">
-    <metrics statements="381" coveredstatements="157" conditionals="135" coveredconditionals="41" methods="68" coveredmethods="8" elements="584" coveredelements="206" complexity="0" loc="381" ncloc="381" packages="7" files="21" classes="21"/>
+<coverage generated="1783589194558" clover="3.2.0">
+  <project timestamp="1783589194558" name="All files">
+    <metrics statements="381" coveredstatements="179" conditionals="135" coveredconditionals="58" methods="68" coveredmethods="13" elements="584" coveredelements="250" complexity="0" loc="381" ncloc="381" packages="7" files="21" classes="21"/>
     <package name="src">
       <metrics statements="20" coveredstatements="20" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
       <file name="app.js" path="D:\ESPE 6.1\AnalisisDiseno\YulianaValencia_30724_G4_ADSW\3. CODIGO\GCM\Backend\src\app.js">
@@ -32,9 +32,9 @@
       <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
       <file name="prisma.js" path="D:\ESPE 6.1\AnalisisDiseno\YulianaValencia_30724_G4_ADSW\3. CODIGO\GCM\Backend\src\config\prisma.js">
         <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
-        <line num="1" count="7" type="stmt"/>
-        <line num="3" count="7" type="stmt"/>
-        <line num="5" count="7" type="stmt"/>
+        <line num="1" count="10" type="stmt"/>
+        <line num="3" count="10" type="stmt"/>
+        <line num="5" count="10" type="stmt"/>
       </file>
     </package>
     <package name="src.controllers">
@@ -197,18 +197,18 @@
       <metrics statements="30" coveredstatements="8" conditionals="0" coveredconditionals="0" methods="22" coveredmethods="0"/>
       <file name="cliente.repository.js" path="D:\ESPE 6.1\AnalisisDiseno\YulianaValencia_30724_G4_ADSW\3. CODIGO\GCM\Backend\src\repositories\cliente.repository.js">
         <metrics statements="8" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="6" coveredmethods="0"/>
-        <line num="1" count="3" type="stmt"/>
+        <line num="1" count="4" type="stmt"/>
         <line num="5" count="0" type="stmt"/>
         <line num="11" count="0" type="stmt"/>
         <line num="19" count="0" type="stmt"/>
         <line num="28" count="0" type="stmt"/>
         <line num="37" count="0" type="stmt"/>
         <line num="44" count="0" type="stmt"/>
-        <line num="50" count="3" type="stmt"/>
+        <line num="50" count="4" type="stmt"/>
       </file>
       <file name="mantenimiento.repository.js" path="D:\ESPE 6.1\AnalisisDiseno\YulianaValencia_30724_G4_ADSW\3. CODIGO\GCM\Backend\src\repositories\mantenimiento.repository.js">
         <metrics statements="9" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="7" coveredmethods="0"/>
-        <line num="1" count="1" type="stmt"/>
+        <line num="1" count="2" type="stmt"/>
         <line num="5" count="0" type="stmt"/>
         <line num="15" count="0" type="stmt"/>
         <line num="24" count="0" type="stmt"/>
@@ -216,18 +216,18 @@
         <line num="44" count="0" type="stmt"/>
         <line num="54" count="0" type="stmt"/>
         <line num="65" count="0" type="stmt"/>
-        <line num="71" count="1" type="stmt"/>
+        <line num="71" count="2" type="stmt"/>
       </file>
       <file name="tecnico.repository.js" path="D:\ESPE 6.1\AnalisisDiseno\YulianaValencia_30724_G4_ADSW\3. CODIGO\GCM\Backend\src\repositories\tecnico.repository.js">
         <metrics statements="8" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="6" coveredmethods="0"/>
-        <line num="1" count="1" type="stmt"/>
+        <line num="1" count="2" type="stmt"/>
         <line num="5" count="0" type="stmt"/>
         <line num="11" count="0" type="stmt"/>
         <line num="19" count="0" type="stmt"/>
         <line num="30" count="0" type="stmt"/>
         <line num="39" count="0" type="stmt"/>
         <line num="46" count="0" type="stmt"/>
-        <line num="52" count="1" type="stmt"/>
+        <line num="52" count="2" type="stmt"/>
       </file>
       <file name="usuario.repository.js" path="D:\ESPE 6.1\AnalisisDiseno\YulianaValencia_30724_G4_ADSW\3. CODIGO\GCM\Backend\src\repositories\usuario.repository.js">
         <metrics statements="5" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="3" coveredmethods="0"/>
@@ -308,7 +308,7 @@
       </file>
     </package>
     <package name="src.services">
-      <metrics statements="145" coveredstatements="65" conditionals="105" coveredconditionals="41" methods="20" coveredmethods="7"/>
+      <metrics statements="145" coveredstatements="87" conditionals="105" coveredconditionals="58" methods="20" coveredmethods="12"/>
       <file name="auth.service.js" path="D:\ESPE 6.1\AnalisisDiseno\YulianaValencia_30724_G4_ADSW\3. CODIGO\GCM\Backend\src\services\auth.service.js">
         <metrics statements="39" coveredstatements="30" conditionals="42" coveredconditionals="27" methods="2" coveredmethods="2"/>
         <line num="1" count="2" type="stmt"/>
@@ -389,45 +389,45 @@
         <line num="85" count="2" type="stmt"/>
       </file>
       <file name="mantenimiento.service.js" path="D:\ESPE 6.1\AnalisisDiseno\YulianaValencia_30724_G4_ADSW\3. CODIGO\GCM\Backend\src\services\mantenimiento.service.js">
-        <metrics statements="38" coveredstatements="4" conditionals="27" coveredconditionals="0" methods="7" coveredmethods="0"/>
-        <line num="1" count="1" type="stmt"/>
-        <line num="2" count="1" type="stmt"/>
-        <line num="3" count="1" type="stmt"/>
-        <line num="7" count="0" type="stmt"/>
-        <line num="9" count="0" type="cond" truecount="0" falsecount="9"/>
+        <metrics statements="38" coveredstatements="26" conditionals="27" coveredconditionals="17" methods="7" coveredmethods="5"/>
+        <line num="1" count="2" type="stmt"/>
+        <line num="2" count="2" type="stmt"/>
+        <line num="3" count="2" type="stmt"/>
+        <line num="7" count="3" type="stmt"/>
+        <line num="9" count="3" type="cond" truecount="8" falsecount="1"/>
         <line num="10" count="0" type="stmt"/>
-        <line num="14" count="0" type="stmt"/>
-        <line num="15" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="16" count="0" type="stmt"/>
-        <line num="20" count="0" type="stmt"/>
-        <line num="21" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="22" count="0" type="stmt"/>
-        <line num="25" count="0" type="stmt"/>
-        <line num="37" count="0" type="stmt"/>
-        <line num="41" count="0" type="stmt"/>
-        <line num="42" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="14" count="3" type="stmt"/>
+        <line num="15" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="16" count="1" type="stmt"/>
+        <line num="20" count="2" type="stmt"/>
+        <line num="21" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="25" count="1" type="stmt"/>
+        <line num="37" count="1" type="stmt"/>
+        <line num="41" count="3" type="stmt"/>
+        <line num="42" count="3" type="cond" truecount="1" falsecount="1"/>
         <line num="43" count="0" type="stmt"/>
-        <line num="45" count="0" type="stmt"/>
+        <line num="45" count="3" type="stmt"/>
         <line num="49" count="0" type="stmt"/>
         <line num="53" count="0" type="stmt"/>
-        <line num="57" count="0" type="stmt"/>
-        <line num="59" count="0" type="stmt"/>
-        <line num="60" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="57" count="1" type="stmt"/>
+        <line num="59" count="1" type="stmt"/>
+        <line num="60" count="1" type="cond" truecount="1" falsecount="1"/>
         <line num="61" count="0" type="stmt"/>
-        <line num="63" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="63" count="1" type="cond" truecount="1" falsecount="1"/>
         <line num="64" count="0" type="stmt"/>
-        <line num="66" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="66" count="1" type="cond" truecount="1" falsecount="1"/>
         <line num="67" count="0" type="stmt"/>
         <line num="68" count="0" type="stmt"/>
         <line num="69" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="71" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="71" count="1" type="cond" truecount="1" falsecount="1"/>
         <line num="72" count="0" type="stmt"/>
         <line num="73" count="0" type="stmt"/>
         <line num="74" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="77" count="0" type="stmt"/>
-        <line num="81" count="0" type="stmt"/>
-        <line num="82" count="0" type="stmt"/>
-        <line num="86" count="1" type="stmt"/>
+        <line num="77" count="1" type="stmt"/>
+        <line num="81" count="1" type="stmt"/>
+        <line num="82" count="1" type="stmt"/>
+        <line num="86" count="2" type="stmt"/>
       </file>
       <file name="tecnico.service.js" path="D:\ESPE 6.1\AnalisisDiseno\YulianaValencia_30724_G4_ADSW\3. CODIGO\GCM\Backend\src\services\tecnico.service.js">
         <metrics statements="34" coveredstatements="4" conditionals="18" coveredconditionals="0" methods="5" coveredmethods="0"/>
