@@ -14,6 +14,7 @@ describe("RF05 - RF09 Gestión de Mantenimientos", () => {
     let controlador;
     let repoMock;
     let gestorMock;
+    let mantenimiento;
 
     beforeEach(() => {
 
@@ -47,23 +48,23 @@ describe("RF05 - RF09 Gestión de Mantenimientos", () => {
 
         controlador = new ControladorReal();
 
+        mantenimiento = {
+
+            equipo:"Laptop",
+
+            marca:"Dell",
+
+            modelo:"Latitude",
+
+            cedulaCliente:"1723456789",
+
+            tecnicoAsignado:"tec@test.com",
+
+            costos:{}
+
+        };
+
     });
-
-    const mantenimiento = {
-
-        equipo:"Laptop",
-
-        marca:"Dell",
-
-        modelo:"Latitude",
-
-        cedulaCliente:"1723456789",
-
-        tecnicoAsignado:"tec@test.com",
-
-        costos:{}
-
-    };
 
     test("Debe registrar un mantenimiento",()=>{
 

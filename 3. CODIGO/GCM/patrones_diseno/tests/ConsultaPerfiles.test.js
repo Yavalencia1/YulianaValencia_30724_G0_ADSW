@@ -1,5 +1,8 @@
 const { ControladorReal } = require("../js/business/controlador");
+const { Mantenimiento, GrupoMantenimientos } = require("../js/patterns/composite");
 
+global.Mantenimiento = Mantenimiento;
+global.GrupoMantenimientos = GrupoMantenimientos;
 global.RepositorioBaseDatos = jest.fn();
 global.GestorNotificaciones = jest.fn();
 

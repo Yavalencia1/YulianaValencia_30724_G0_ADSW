@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for repositories/cliente.repository.js</title>
+    <title>Code coverage report for repositories/tecnico.repository.js</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../prettify.css" />
     <link rel="stylesheet" href="../base.css" />
@@ -19,7 +19,7 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../index.html">All files</a> / <a href="index.html">repositories</a> cliente.repository.js</h1>
+        <h1><a href="../index.html">All files</a> / <a href="index.html">repositories</a> tecnico.repository.js</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
@@ -113,7 +113,9 @@
 <a name='L48'></a><a href='#L48'>48</a>
 <a name='L49'></a><a href='#L49'>49</a>
 <a name='L50'></a><a href='#L50'>50</a>
-<a name='L51'></a><a href='#L51'>51</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">3x</span>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -140,13 +142,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -156,24 +151,33 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">const prisma = require("../config/prisma");
 &nbsp;
-class ClienteRepository {
+class TecnicoRepository {
 <span class="fstat-no" title="function not covered" >    as</span>ync create(data) {
-<span class="cstat-no" title="statement not covered" >        return await prisma.cliente.create({</span>
+<span class="cstat-no" title="statement not covered" >        return await prisma.tecnico.create({</span>
             data
         });
     }
 &nbsp;
 <span class="fstat-no" title="function not covered" >    as</span>ync findAll() {
-<span class="cstat-no" title="statement not covered" >        return await prisma.cliente.findMany({</span>
+<span class="cstat-no" title="statement not covered" >        return await prisma.tecnico.findMany({</span>
             include: {
                 mantenimientos: true
             }
@@ -181,7 +185,7 @@ class ClienteRepository {
     }
 &nbsp;
 <span class="fstat-no" title="function not covered" >    as</span>ync findById(id) {
-<span class="cstat-no" title="statement not covered" >        return await prisma.cliente.findUnique({</span>
+<span class="cstat-no" title="statement not covered" >        return await prisma.tecnico.findUnique({</span>
             where: { id },
             include: {
                 mantenimientos: true
@@ -189,9 +193,11 @@ class ClienteRepository {
         });
     }
 &nbsp;
-<span class="fstat-no" title="function not covered" >    as</span>ync findByCedula(cedula) {
-<span class="cstat-no" title="statement not covered" >        return await prisma.cliente.findUnique({</span>
-            where: { cedula },
+<span class="fstat-no" title="function not covered" >    as</span>ync findByCorreo(correo) {
+        // En schema.prisma, correo no es único, así que usamos findFirst o findUnique si fuese.
+        // Asumiendo findFirst para ser seguro ya que no tiene @unique en schema.prisma.
+<span class="cstat-no" title="statement not covered" >        return await prisma.tecnico.findFirst({</span>
+            where: { correo },
             include: {
                 mantenimientos: true
             }
@@ -199,20 +205,20 @@ class ClienteRepository {
     }
 &nbsp;
 <span class="fstat-no" title="function not covered" >    as</span>ync update(id, data) {
-<span class="cstat-no" title="statement not covered" >        return await prisma.cliente.update({</span>
+<span class="cstat-no" title="statement not covered" >        return await prisma.tecnico.update({</span>
             where: { id },
             data
         });
     }
 &nbsp;
 <span class="fstat-no" title="function not covered" >    as</span>ync delete(id) {
-<span class="cstat-no" title="statement not covered" >        return await prisma.cliente.delete({</span>
+<span class="cstat-no" title="statement not covered" >        return await prisma.tecnico.delete({</span>
             where: { id }
         });
     }
 }
 &nbsp;
-module.exports = new ClienteRepository();
+module.exports = new TecnicoRepository();
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->

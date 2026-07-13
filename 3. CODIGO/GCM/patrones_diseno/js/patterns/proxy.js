@@ -6,6 +6,15 @@
  * 3. Registro de logs de seguridad y auditoría en LocalStorage.
  */
 
+// Clear session on page reload (useful for hot-reload/compiling)
+try {
+    const navEntries = performance.getEntriesByType("navigation");
+    if (navEntries.length > 0 && navEntries[0].type === "reload") {
+        localStorage.removeItem('sesionActiva');
+    }
+} catch (e) {
+    console.error("Failed to check navigation type", e);
+}
 /**
  * Interfaz IControladorPrincipal (Simulada en JS)
  */

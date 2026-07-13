@@ -60,12 +60,14 @@ class AuthService {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
+        const debeCambiarPw = (rol === 'Técnico' || rol === 'Administrador');
         const newUser = await usuarioRepository.create({
             nombre,
             usuario,
             password: hashedPassword,
             rol,
-            cedula
+            cedula,
+            debeCambiarPw
         });
 
         // Retornar sin password
@@ -101,9 +103,40 @@ class AuthService {
                 usuario: user.usuario,
                 nombre: user.nombre,
                 rol: user.rol,
-                cedula: user.cedula
+                cedula: user.cedula,
+                debeCambiarPw: user.debeCambiarPw
             }
         };
+    }
+
+    async changePassword(usuario, oldPassword, newPassword) {
+        if (!usuario || !oldPassword || !newPassword) {
+            throw new Error("Todos los campos son requeridos.");
+        }
+        if (newPassword.length < 6) {
+            throw new Error("La nueva contraseña debe tener al menos 6 caracteres.");
+        }
+        const user = await usuarioRepository.findByUsuario(usuario);
+        if (!user) {
+            throw new Error("Usuario no encontrado.");
+        }
+        const isMatch = await bcrypt.compare(oldPassword, user.password);
+        if (!isMatch) {
+            throw new Error("La contraseña actual es incorrecta.");
+        }
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        
+        const prisma = require("../config/prisma");
+        const updatedUser = await prisma.usuario.update({
+            where: { usuario },
+            data: {
+                password: hashedPassword,
+                debeCambiarPw: false
+            }
+        });
+        
+        const { password: _, ...userWithoutPassword } = updatedUser;
+        return userWithoutPassword;
     }
 }
 

@@ -57,6 +57,20 @@ class AuthController {
             next(error);
         }
     }
+
+    async changePassword(req, res, next) {
+        try {
+            const { usuario, oldPassword, newPassword } = req.body;
+            const result = await authService.changePassword(usuario, oldPassword, newPassword);
+            return res.status(200).json({
+                ok: true,
+                message: "Contraseña cambiada con éxito.",
+                data: result
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 module.exports = new AuthController();

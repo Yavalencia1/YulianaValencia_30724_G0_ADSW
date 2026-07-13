@@ -21,7 +21,6 @@ class UI_SistemaMantenimiento {
     constructor() {
         this.controlador = window.controlador;
         this.detectarYInicializarPantalla();
-        this.inyectarModalRegistrarPersonal();
     }
 
     /**
@@ -91,7 +90,10 @@ class UI_SistemaMantenimiento {
         }
 
         // 2. Vincular el botón del Sidebar para abrir el modal
-        const bootstrapModal = new bootstrap.Modal(document.getElementById('modalRegistrarPersonal'));
+        let bootstrapModal = null;
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            bootstrapModal = new bootstrap.Modal(document.getElementById('modalRegistrarPersonal'));
+        }
         
         // Se requiere usar event delegation por la inyección dinámica del sidebar
         document.addEventListener('click', (e) => {
@@ -107,7 +109,14 @@ class UI_SistemaMantenimiento {
                 document.getElementById('group-pers-especialidad').classList.remove('d-none');
                 document.getElementById('pers-especialidad').required = true;
                 
-                bootstrapModal.show();
+                if (bootstrapModal) {
+                    bootstrapModal.show();
+                } else if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    bootstrapModal = new bootstrap.Modal(document.getElementById('modalRegistrarPersonal'));
+                    bootstrapModal.show();
+                } else {
+                    console.warn("Bootstrap JS is not loaded. Cannot display registration modal.");
+                }
             }
         });
 
@@ -168,7 +177,12 @@ class UI_SistemaMantenimiento {
 
                 exitoDiv.classList.remove('d-none');
                 setTimeout(() => {
-                    bootstrapModal.hide();
+                    if (bootstrapModal) {
+                        bootstrapModal.hide();
+                    } else if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        const instance = bootstrap.Modal.getInstance(document.getElementById('modalRegistrarPersonal'));
+                        instance?.hide();
+                    }
                     // Si estamos en la pantalla de técnicos y registramos un técnico, recargar la tabla
                     if (window.location.pathname.includes('tecnicos.html')) {
                         window.location.reload();
@@ -189,20 +203,26 @@ class UI_SistemaMantenimiento {
         const path = window.location.pathname;
         const pagina = path.substring(path.lastIndexOf('/') + 1);
 
-        // Si no hay sesión y no estamos en login.html, redirigir a login
-        if (!this.controlador.sesionActiva && pagina !== 'login.html') {
+        // Si no hay sesión y no estamos en login.html o registro.html, redirigir a login
+        if (!this.controlador.sesionActiva && pagina !== 'login.html' && pagina !== 'registro.html') {
             window.location.href = 'login.html';
             return;
         }
 
-        // Si ya hay sesión activa e ingresa a login, redirigir a index (que decidirá a dónde mandarlo)
-        if (this.controlador.sesionActiva && pagina === 'login.html') {
+        // Si el usuario debe cambiar su contraseña por primera vez, forzar redirección a cambiar-contrasena.html
+        if (this.controlador.sesionActiva && this.controlador.sesionActiva.debeCambiarPw && pagina !== 'cambiar-contrasena.html') {
+            window.location.href = 'cambiar-contrasena.html';
+            return;
+        }
+
+        // Si ya hay sesión activa e ingresa a login o registro (y no debe cambiar contraseña), redirigir a index
+        if (this.controlador.sesionActiva && !this.controlador.sesionActiva.debeCambiarPw && (pagina === 'login.html' || pagina === 'registro.html' || pagina === 'cambiar-contrasena.html')) {
             this.redirigirUsuarioSegunRol();
             return;
         }
 
-        // Cargar componentes de estructura común (Sidebar y Navbar) si no estamos en Login
-        if (pagina !== 'login.html' && pagina !== 'index.html' && pagina !== '') {
+        // Cargar componentes de estructura común (Sidebar y Navbar) si no estamos en Login, Registro o Cambiar Contraseña
+        if (pagina !== 'login.html' && pagina !== 'registro.html' && pagina !== 'cambiar-contrasena.html' && pagina !== 'index.html' && pagina !== '') {
             this.inyectarEstructuraComun(pagina);
         }
 
@@ -214,6 +234,15 @@ class UI_SistemaMantenimiento {
                 break;
             case 'login.html':
                 this.mostrarPantallaLogin();
+                break;
+            case 'registro.html':
+                this.mostrarPantallaRegistro();
+                break;
+            case 'registrar-personal.html':
+                this.mostrarPantallaRegistrarPersonalPage();
+                break;
+            case 'cambiar-contrasena.html':
+                this.mostrarPantallaCambiarContrasena();
                 break;
             case 'clientes.html':
                 this.mostrarPantallaClientes();
@@ -294,8 +323,8 @@ class UI_SistemaMantenimiento {
                     <li class="sidebar-item ${paginaActiva === 'mantenimientos.html' ? 'active' : ''}">
                         <a href="mantenimientos.html"><i class="bi bi-tools"></i> Mantenimientos</a>
                     </li>
-                    <li class="sidebar-item">
-                        <a href="#" id="btn-registrar-personal-sidebar"><i class="bi bi-person-plus-fill"></i> Registrar Personal</a>
+                    <li class="sidebar-item ${paginaActiva === 'registrar-personal.html' ? 'active' : ''}">
+                        <a href="registrar-personal.html"><i class="bi bi-person-plus-fill"></i> Registrar Personal</a>
                     </li>
                 `;
             } 
@@ -502,6 +531,24 @@ class UI_SistemaMantenimiento {
         const loginForm = document.getElementById('login-form');
         if (!loginForm) return;
 
+        // Toggle password visibility
+        const toggleBtn = document.getElementById('btn-toggle-password');
+        const claveInput = document.getElementById('txt-clave');
+        const icon = document.getElementById('toggle-password-icon');
+        if (toggleBtn && claveInput && icon) {
+            toggleBtn.addEventListener('click', () => {
+                if (claveInput.type === 'password') {
+                    claveInput.type = 'text';
+                    icon.classList.remove('bi-eye');
+                    icon.classList.add('bi-eye-slash');
+                } else {
+                    claveInput.type = 'password';
+                    icon.classList.remove('bi-eye-slash');
+                    icon.classList.add('bi-eye');
+                }
+            });
+        }
+
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const usuario = document.getElementById('txt-usuario').value.trim();
@@ -527,6 +574,104 @@ class UI_SistemaMantenimiento {
             } catch (err) {
                 feedback.classList.remove('d-none');
                 feedback.textContent = 'Error: ' + err.message;
+            }
+        });
+    }
+
+    /**
+     * Lógica para registro.html
+     */
+    mostrarPantallaRegistro() {
+        const registroForm = document.getElementById('registro-form');
+        if (!registroForm) return;
+
+        // Toggle password visibility
+        const toggleBtn = document.getElementById('btn-toggle-password');
+        const claveInput = document.getElementById('txt-clave');
+        const icon = document.getElementById('toggle-password-icon');
+        if (toggleBtn && claveInput && icon) {
+            toggleBtn.addEventListener('click', () => {
+                if (claveInput.type === 'password') {
+                    claveInput.type = 'text';
+                    icon.classList.remove('bi-eye');
+                    icon.classList.add('bi-eye-slash');
+                } else {
+                    claveInput.type = 'password';
+                    icon.classList.remove('bi-eye-slash');
+                    icon.classList.add('bi-eye');
+                }
+            });
+        }
+
+        // Toggle confirm password visibility
+        const toggleConfirmBtn = document.getElementById('btn-toggle-confirm-password');
+        const confirmClaveInput = document.getElementById('txt-confirmar-clave');
+        const confirmIcon = document.getElementById('toggle-confirm-password-icon');
+        if (toggleConfirmBtn && confirmClaveInput && confirmIcon) {
+            toggleConfirmBtn.addEventListener('click', () => {
+                if (confirmClaveInput.type === 'password') {
+                    confirmClaveInput.type = 'text';
+                    confirmIcon.classList.remove('bi-eye');
+                    confirmIcon.classList.add('bi-eye-slash');
+                } else {
+                    confirmClaveInput.type = 'password';
+                    confirmIcon.classList.remove('bi-eye-slash');
+                    confirmIcon.classList.add('bi-eye');
+                }
+            });
+        }
+
+        registroForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const cedula = document.getElementById('txt-cedula').value.trim();
+            const nombre = document.getElementById('txt-nombre').value.trim();
+            const usuario = document.getElementById('txt-usuario').value.trim();
+            const correo = document.getElementById('txt-correo').value.trim();
+            const telefono = document.getElementById('txt-telefono').value.trim();
+            const clave = document.getElementById('txt-clave').value;
+            const confirmarClave = document.getElementById('txt-confirmar-clave').value;
+            const feedback = document.getElementById('registro-feedback');
+            const exito = document.getElementById('registro-exito');
+
+            feedback.classList.add('d-none');
+            exito.classList.add('d-none');
+
+            if (!cedula || !nombre || !usuario || !correo || !telefono || !clave || !confirmarClave) {
+                feedback.classList.remove('d-none');
+                feedback.textContent = 'Todos los campos son obligatorios.';
+                return;
+            }
+
+            if (clave.length < 6) {
+                feedback.classList.remove('d-none');
+                feedback.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+                return;
+            }
+
+            if (clave !== confirmarClave) {
+                feedback.classList.remove('d-none');
+                feedback.textContent = 'Las contraseñas no coinciden.';
+                return;
+            }
+
+            try {
+                this.controlador.repo.registrarClientePublico({
+                    nombre,
+                    usuario,
+                    password: clave,
+                    rol: 'Cliente',
+                    cedula,
+                    correo,
+                    telefono
+                });
+
+                exito.classList.remove('d-none');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+            } catch (err) {
+                feedback.classList.remove('d-none');
+                feedback.textContent = 'Error al registrar: ' + err.message;
             }
         });
     }
@@ -2153,6 +2298,221 @@ class UI_SistemaMantenimiento {
                 plugins: {
                     legend: { display: false }
                 }
+            }
+        });
+    }
+
+    /**
+     * Lógica para registrar-personal.html
+     */
+    mostrarPantallaRegistrarPersonalPage() {
+        const form = document.getElementById('form-registrar-personal-page');
+        if (!form) return;
+
+        // Auto-generation of username and password as user types names and date of birth
+        const nameInputs = document.querySelectorAll('.name-input');
+        const updateUsername = () => {
+            const pNombre = document.getElementById('pers-primer-nombre').value.trim();
+            const sNombre = document.getElementById('pers-segundo-nombre').value.trim();
+            const pApellido = document.getElementById('pers-primer-apellido').value.trim();
+
+            let usuario = '';
+            if (pNombre && pApellido) {
+                const init1 = pNombre.charAt(0).toLowerCase();
+                const init2 = sNombre ? sNombre.charAt(0).toLowerCase() : '';
+                const apellido = pApellido.toLowerCase();
+                usuario = init1 + init2 + apellido;
+            }
+            document.getElementById('pers-usuario').value = usuario;
+        };
+
+        nameInputs.forEach(input => {
+            input.addEventListener('input', updateUsername);
+        });
+
+        const dobInput = document.getElementById('pers-fecha-nacimiento');
+        dobInput.addEventListener('change', () => {
+            const fechaNac = dobInput.value; // "YYYY-MM-DD"
+            if (fechaNac) {
+                const parts = fechaNac.split('-');
+                if (parts.length === 3) {
+                    const y = parts[0].substring(2); // last 2 digits of year
+                    const m = parts[1]; // month
+                    const d = parts[2]; // day
+                    const contrasena = d + m + y; // "DDMMYY"
+                    document.getElementById('pers-clave').value = contrasena;
+                }
+            }
+        });
+
+        // Hide/Show specialty according to role
+        document.getElementById('pers-rol').addEventListener('change', (e) => {
+            const especialidadGroup = document.getElementById('group-pers-especialidad');
+            const especialidadInput = document.getElementById('pers-especialidad');
+            if (e.target.value === 'Administrador') {
+                especialidadGroup.classList.add('d-none');
+                especialidadInput.required = false;
+            } else {
+                especialidadGroup.classList.remove('d-none');
+                especialidadInput.required = true;
+            }
+        });
+
+        // Submit form
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorDiv = document.getElementById('reg-pers-error');
+            const exitoDiv = document.getElementById('reg-pers-exito');
+            errorDiv.classList.add('d-none');
+            exitoDiv.classList.add('d-none');
+
+            const rol = document.getElementById('pers-rol').value;
+            const pNombre = document.getElementById('pers-primer-nombre').value.trim();
+            const sNombre = document.getElementById('pers-segundo-nombre').value.trim();
+            const pApellido = document.getElementById('pers-primer-apellido').value.trim();
+            const sApellido = document.getElementById('pers-segundo-apellido').value.trim();
+            
+            // Full name format
+            const nombre = `${pNombre} ${sNombre} ${pApellido} ${sApellido}`.replace(/\s+/g, ' ').trim();
+            const usuario = document.getElementById('pers-usuario').value.trim();
+            const correo = document.getElementById('pers-correo').value.trim();
+            const telefono = document.getElementById('pers-telefono').value.trim();
+            const especialidad = document.getElementById('pers-especialidad').value.trim();
+            const clave = document.getElementById('pers-clave').value;
+
+            try {
+                // Register user via database repo adapter
+                this.controlador.repo.registrarClientePublico({
+                    nombre,
+                    usuario,
+                    password: clave,
+                    rol,
+                    correo,
+                    telefono,
+                    especialidad: rol === 'Técnico' ? especialidad : undefined
+                });
+
+                // Send email using Bridge/EmailJS pattern
+                if (typeof GestorNotificaciones !== 'undefined' && typeof ProveedorCorreo !== 'undefined') {
+                    const gestor = new GestorNotificaciones();
+                    gestor.setProveedor(new ProveedorCorreo());
+                    await gestor.notificarCliente(
+                        { nombre, correo }, 
+                        `Tu usuario de ingreso es: ${usuario} y tu contraseña temporal es: ${clave}.`
+                    );
+                } else {
+                    console.warn("Notification classes are not available.");
+                }
+
+                // Register security audit log locally
+                this.controlador.repo.registrarLog({
+                    fecha: new Date().toISOString(),
+                    usuario: this.controlador.sesionActiva.usuario,
+                    operacion: 'REGISTRO_PERSONAL_EXITOSO',
+                    detalle: `Administrador registró nuevo ${rol}: ${nombre} (${usuario})`
+                });
+
+                exitoDiv.classList.remove('d-none');
+                setTimeout(() => {
+                    window.location.href = 'tecnicos.html';
+                }, 2500);
+
+            } catch (err) {
+                errorDiv.textContent = 'Error al registrar: ' + err.message;
+                errorDiv.classList.remove('d-none');
+            }
+        });
+    }
+
+    /**
+     * Lógica para cambiar-contrasena.html
+     */
+    mostrarPantallaCambiarContrasena() {
+        const form = document.getElementById('change-password-form');
+        if (!form) return;
+
+        const sesion = this.controlador.sesionActiva;
+        if (!sesion) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        // Pre-llenar el usuario
+        document.getElementById('txt-usuario-change').value = sesion.usuario;
+
+        // Configurar toggles de visibilidad
+        const setupToggle = (btnId, inputId, iconId) => {
+            const btn = document.getElementById(btnId);
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (btn && input && icon) {
+                btn.addEventListener('click', () => {
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.remove('bi-eye');
+                        icon.classList.add('bi-eye-slash');
+                    } else {
+                        input.type = 'password';
+                        icon.classList.remove('bi-eye-slash');
+                        icon.classList.add('bi-eye');
+                    }
+                });
+            }
+        };
+
+        setupToggle('btn-toggle-actual', 'txt-clave-actual', 'toggle-actual-icon');
+        setupToggle('btn-toggle-nueva', 'txt-nueva-clave', 'toggle-nueva-icon');
+        setupToggle('btn-toggle-confirmar', 'txt-confirmar-nueva', 'toggle-confirmar-icon');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const feedback = document.getElementById('change-feedback');
+            const exito = document.getElementById('change-exito');
+            feedback.classList.add('d-none');
+            exito.classList.add('d-none');
+
+            const oldPassword = document.getElementById('txt-clave-actual').value;
+            const newPassword = document.getElementById('txt-nueva-clave').value;
+            const confirmPassword = document.getElementById('txt-confirmar-nueva').value;
+
+            if (newPassword.length < 6) {
+                feedback.textContent = 'La nueva contraseña debe tener al menos 6 caracteres.';
+                feedback.classList.remove('d-none');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                feedback.textContent = 'La nueva contraseña y su confirmación no coinciden.';
+                feedback.classList.remove('d-none');
+                return;
+            }
+
+            if (oldPassword === newPassword) {
+                feedback.textContent = 'La nueva contraseña debe ser diferente a la contraseña temporal.';
+                feedback.classList.remove('d-none');
+                return;
+            }
+
+            try {
+                // Llamar al endpoint del backend para cambiar contraseña
+                this.controlador.repo.apiRequest('POST', '/auth/change-password', {
+                    usuario: sesion.usuario,
+                    oldPassword,
+                    newPassword
+                });
+
+                // Si tiene éxito, actualizar la sesión en localStorage
+                sesion.debeCambiarPw = false;
+                localStorage.setItem('sesionActiva', JSON.stringify(sesion));
+
+                exito.classList.remove('d-none');
+                setTimeout(() => {
+                    this.redirigirUsuarioSegunRol();
+                }, 2000);
+
+            } catch (err) {
+                feedback.textContent = 'Error al actualizar contraseña: ' + err.message;
+                feedback.classList.remove('d-none');
             }
         });
     }

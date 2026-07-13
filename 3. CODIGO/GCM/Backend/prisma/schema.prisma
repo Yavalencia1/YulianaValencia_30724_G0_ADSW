@@ -8,12 +8,13 @@ datasource db {
 }
 
 model Usuario {
-  id        Int      @id @default(autoincrement())
-  nombre    String
-  usuario   String   @unique
-  password  String
-  rol       String   @default("Cliente")
-  cedula    String?
+  id             Int      @id @default(autoincrement())
+  nombre         String
+  usuario        String   @unique
+  password       String
+  rol            String   @default("Cliente")
+  cedula         String?
+  debeCambiarPw  Boolean  @default(false)
 }
 
 model Cliente {
