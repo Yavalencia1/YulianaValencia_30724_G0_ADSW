@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const usuarioRepository = require("../repositories/usuario.repository");
 const clienteRepository = require("../repositories/cliente.repository");
+const emailService = require("./email.service");
 
 class AuthService {
     async register(nombre, usuario, password, rol = "Cliente", cedula = null, correo = "", telefono = "", especialidad = "") {
@@ -70,9 +71,31 @@ class AuthService {
             debeCambiarPw
         });
 
+        let correoEnviado = false;
+        let correoError = null;
+
+        if (correo) {
+            try {
+                await emailService.sendCredentialsEmail({
+                    to: correo,
+                    nombre,
+                    usuario,
+                    password,
+                    rol
+                });
+                correoEnviado = true;
+            } catch (error) {
+                correoError = error.message;
+            }
+        }
+
         // Retornar sin password
         const { password: _, ...userWithoutPassword } = newUser;
-        return userWithoutPassword;
+        return {
+            ...userWithoutPassword,
+            correoEnviado,
+            correoError
+        };
     }
 
     async login(usuario, password) {

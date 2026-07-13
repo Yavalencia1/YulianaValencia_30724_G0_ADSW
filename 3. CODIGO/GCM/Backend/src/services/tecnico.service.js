@@ -63,17 +63,30 @@ class TecnicoService {
     async deleteTecnico(id) {
         const tecnico = await this.getTecnicoById(id); // Verificar existencia
         
+        // Eliminar mantenimientos asociados
+        try {
+            const prisma = require("../config/prisma");
+            await prisma.mantenimiento.deleteMany({
+                where: { tecnicoId: parseInt(id) }
+            });
+        } catch (err) {
+            console.error("Error al eliminar mantenimientos del técnico:", err);
+        }
+
         // Eliminar usuario asociado
-        if (tecnico.correo) {
-            try {
-                const username = tecnico.correo.split("@")[0];
-                const prisma = require("../config/prisma");
-                await prisma.usuario.deleteMany({
-                    where: { usuario: username }
-                });
-            } catch (err) {
-                console.error("Error al eliminar usuario asociado al técnico:", err);
-            }
+        try {
+            const prisma = require("../config/prisma");
+            const username = tecnico.correo ? tecnico.correo.split("@")[0] : null;
+            await prisma.usuario.deleteMany({
+                where: {
+                    OR: [
+                        { usuario: username || "" },
+                        { nombre: tecnico.nombre, rol: "Técnico" }
+                    ]
+                }
+            });
+        } catch (err) {
+            console.error("Error al eliminar usuario asociado al técnico:", err);
         }
 
         return await tecnicoRepository.delete(parseInt(id));

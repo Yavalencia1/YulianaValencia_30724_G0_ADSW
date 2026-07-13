@@ -369,7 +369,10 @@ class ControladorReal {
         };
         
     }
-    
+
+    obtenerAdministradores() {
+        return this.repo.obtenerAdministradores();
+    }
 }
 if (typeof module !== "undefined") {
 

@@ -14,7 +14,7 @@ class IProveedorComunicaciones {
         }
     }
 
-    enviarMensaje(destino, mensaje) {
+    enviarMensaje(destino, mensaje, params = {}) {
         throw new Error("Método 'enviarMensaje()' debe ser implementado.");
     }
 }
@@ -23,7 +23,7 @@ class IProveedorComunicaciones {
  * Implementación Concreta 1: Proveedor de WhatsApp
  */
 class ProveedorWhatsApp extends IProveedorComunicaciones {
-    enviarMensaje(destino, mensaje) {
+    enviarMensaje(destino, mensaje, params = {}) {
         console.log(`[Bridge - WhatsApp] Enviando mensaje a ${destino}: "${mensaje}"`);
         
         // Simulación: Guardamos en el registro del repositorio local
@@ -43,7 +43,7 @@ class ProveedorWhatsApp extends IProveedorComunicaciones {
  */
 class ProveedorCorreo extends IProveedorComunicaciones {
 
-    async enviarMensaje(destino, mensaje) {
+    async enviarMensaje(destino, mensaje, params = {}) {
 
         try{
             console.log("Destino:", destino);
@@ -58,7 +58,15 @@ class ProveedorCorreo extends IProveedorComunicaciones {
 
                     to_email: destino,
 
-                    mensaje: mensaje
+                    mensaje: mensaje,
+
+                    usuario: params.usuario || "",
+
+                    contrasena: params.clave || params.password || "",
+
+                    clave: params.clave || params.password || "",
+
+                    password: params.password || params.clave || ""
 
                 }
 
@@ -127,7 +135,7 @@ class GestorNotificaciones {
      * @param {Object} cliente Objeto con datos del cliente (nombre, correo, telefono)
      * @param {string} mensaje Contenido del mensaje a enviar
      */
-    notificarCliente(cliente, mensaje) {
+    notificarCliente(cliente, mensaje, extraParams = {}) {
         if (!cliente) {
             console.error("[GestorNotificaciones] Error: No se especificó el cliente para notificar.");
             return false;
@@ -147,6 +155,12 @@ class GestorNotificaciones {
         const mensajePersonalizado = `Hola ${cliente.nombre}, ${mensaje}`;
 
         // Delegar envío a la implementación concreta (Bridge)
+        if (Object.keys(extraParams).length > 0) {
+            return this.proveedor.enviarMensaje(destino, mensajePersonalizado, {
+                nombre: cliente.nombre,
+                ...extraParams
+            });
+        }
         return this.proveedor.enviarMensaje(destino, mensajePersonalizado);
     }
 }

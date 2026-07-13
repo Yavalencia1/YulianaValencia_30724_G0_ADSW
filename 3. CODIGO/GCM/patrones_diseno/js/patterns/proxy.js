@@ -30,6 +30,7 @@ class IControladorPrincipal {
     gestionarCRUDTecnico(datos) { throw new Error("Método no implementado."); }
     registrarMantenimiento(datos) { throw new Error("Método no implementado."); }
     generarEstadisticas(periodo, filtro) { throw new Error("Método no implementado."); }
+    obtenerAdministradores() { throw new Error("Método no implementado."); }
 }
 
 /**
@@ -233,6 +234,11 @@ class ProxyControlador extends IControladorPrincipal {
         );
 
         return resultado;
+    }
+
+    obtenerAdministradores() {
+        this.verificarPermisos('VER_ADMINISTRADORES');
+        return this.controladorReal.obtenerAdministradores();
     }
 }
 

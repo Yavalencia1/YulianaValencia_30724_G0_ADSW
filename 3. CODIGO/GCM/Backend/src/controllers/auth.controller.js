@@ -71,6 +71,27 @@ class AuthController {
             next(error);
         }
     }
+
+    async getAdministradores(req, res, next) {
+        try {
+            const prisma = require("../config/prisma");
+            const admins = await prisma.usuario.findMany({
+                where: { rol: "Administrador" },
+                select: {
+                    id: true,
+                    nombre: true,
+                    usuario: true,
+                    rol: true
+                }
+            });
+            return res.status(200).json({
+                ok: true,
+                data: admins
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 module.exports = new AuthController();

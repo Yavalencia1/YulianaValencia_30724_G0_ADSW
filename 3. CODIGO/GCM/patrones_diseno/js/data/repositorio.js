@@ -125,6 +125,10 @@ class RepositorioBaseDatos {
         return false;
     }
 
+    obtenerAdministradores() {
+        return this.apiRequest('GET', '/auth/administradores') || [];
+    }
+
     // ==========================================
     // CAPA MANTENIMIENTOS
     // ==========================================

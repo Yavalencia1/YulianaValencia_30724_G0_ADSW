@@ -99,13 +99,15 @@
                         <!-- Especialidad Técnica -->
                         <div class="col-md-12 mb-3" id="group-pers-especialidad">
                             <label for="pers-especialidad" class="form-label small fw-semibold text-secondary">Especialidad Técnica</label>
-                            <input type="text" class="form-control" id="pers-especialidad" placeholder="ej. Dispositivos Móviles" required>
+                            <input type="text" class="form-control" id="pers-especialidad" placeholder="ej. Dispositivos Móviles" list="especialidades-list" required>
+                            <datalist id="especialidades-list"></datalist>
                         </div>
                     </div>
 
                     <div class="row bg-light p-3 rounded mb-4 border border-dashed">
                         <div class="col-12 mb-2">
                             <span class="small fw-bold text-muted uppercase"><i class="bi bi-shield-lock-fill"></i> Credenciales de Acceso Auto-generadas</span>
+                            <div class="small text-muted mt-1">Usuario: primera inicial del primer nombre + primera inicial del segundo nombre, si existe + primer apellido. Contraseña: fecha de nacimiento en formato DDMMYY.</div>
                         </div>
                         <!-- Usuario Generado -->
                         <div class="col-md-6 mb-3">
@@ -121,7 +123,7 @@
 
                     <div class="d-flex justify-content-end gap-2 border-top pt-3">
                         <a href="estadisticas.html" class="btn btn-secondary px-4">Cancelar</a>
-                        <button type="submit" class="btn btn-pres px-4" style="background-color: var(--color-pres-accent); color: white;" id="btn-guardar-personal-page">Registrar y Enviar Correo</button>
+                        <button type="submit" class="btn btn-neg px-4" id="btn-guardar-personal-page">Registrar y Enviar Correo</button>
                     </div>
                 </form>
             </div>
@@ -129,10 +131,6 @@
     </div>
 
     <!-- Cargar Scripts del Sistema en Orden de Capa -->
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-    <script>
-        emailjs.init("PUBLIC_KEY");
-    </script>
     <script src="js/data/repositorio.js"></script>
     <script src="js/patterns/composite.js"></script>
     <script src="js/patterns/bridge.js"></script>

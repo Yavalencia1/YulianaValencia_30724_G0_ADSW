@@ -68,6 +68,16 @@ class ClienteService {
     async deleteCliente(id) {
         const cliente = await this.getClienteById(id); // Verificar existencia
         
+        // Eliminar mantenimientos asociados
+        try {
+            const prisma = require("../config/prisma");
+            await prisma.mantenimiento.deleteMany({
+                where: { clienteId: parseInt(id) }
+            });
+        } catch (err) {
+            console.error("Error al eliminar mantenimientos del cliente:", err);
+        }
+
         // Eliminar usuario asociado
         try {
             const prisma = require("../config/prisma");

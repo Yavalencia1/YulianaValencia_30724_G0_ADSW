@@ -70,7 +70,8 @@ class UI_SistemaMantenimiento {
                                     </div>
                                     <div class="mb-3" id="group-pers-especialidad">
                                         <label for="pers-especialidad" class="form-label small fw-semibold text-secondary">Especialidad Técnica</label>
-                                        <input type="text" class="form-control" id="pers-especialidad" placeholder="ej. Dispositivos Móviles" required>
+                                        <input type="text" class="form-control" id="pers-especialidad" placeholder="ej. Dispositivos Móviles" list="especialidades-list" required>
+                                        <datalist id="especialidades-list"></datalist>
                                     </div>
                                     <div class="mb-3">
                                         <label for="pers-clave" class="form-label small fw-semibold text-secondary">Contraseña de Acceso</label>
@@ -87,6 +88,7 @@ class UI_SistemaMantenimiento {
                 </div>
             `;
             document.body.insertAdjacentHTML('beforeend', modalHTML);
+            this.actualizarDatalistEspecialidades();
         }
 
         // 2. Vincular el botón del Sidebar para abrir el modal
@@ -250,6 +252,9 @@ class UI_SistemaMantenimiento {
             case 'tecnicos.html':
                 this.mostrarPantallaTecnicos();
                 break;
+            case 'administradores.html':
+                this.mostrarPantallaAdministradores();
+                break;
             case 'mantenimientos.html':
                 this.mostrarPantallaMantenimientos();
                 break;
@@ -319,6 +324,9 @@ class UI_SistemaMantenimiento {
                     </li>
                     <li class="sidebar-item ${paginaActiva === 'tecnicos.html' ? 'active' : ''}">
                         <a href="tecnicos.html"><i class="bi bi-person-badge"></i> Técnicos</a>
+                    </li>
+                    <li class="sidebar-item ${paginaActiva === 'administradores.html' ? 'active' : ''}">
+                        <a href="administradores.html"><i class="bi bi-shield-check"></i> Administradores</a>
                     </li>
                     <li class="sidebar-item ${paginaActiva === 'mantenimientos.html' ? 'active' : ''}">
                         <a href="mantenimientos.html"><i class="bi bi-tools"></i> Mantenimientos</a>
@@ -713,8 +721,11 @@ class UI_SistemaMantenimiento {
                     <td>${c.telefono}</td>
                     <td>
                         ${sesionRol === 'Administrador' ? `
-                                <button class="btn btn-sm btn-outline-primary btn-editar-cli" data-cedula="${c.cedula}">
+                                <button class="btn btn-sm btn-outline-primary btn-editar-cli" data-cedula="${c.cedula}" title="Editar">
                                     <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger btn-eliminar-cli" data-cedula="${c.cedula}" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
                                 </button>
                             ` : '<span class="text-muted">-</span>'}
                     </td>
@@ -727,6 +738,21 @@ class UI_SistemaMantenimiento {
                 btn.addEventListener('click', (e) => {
                     const cedula = btn.getAttribute('data-cedula');
                     window.location.href = `editar-cliente.html?cedula=${cedula}`;
+                });
+            });
+
+            // Enlazar botones de eliminación
+            document.querySelectorAll('.btn-eliminar-cli').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const cedula = btn.getAttribute('data-cedula');
+                    if (confirm(`¿Está seguro de eliminar al cliente con cédula ${cedula}? Se eliminarán también sus mantenimientos asociados.`)) {
+                        try {
+                            this.controlador.gestionarCRUDCliente({ accion: 'eliminar', cedula });
+                            cargarYRenderizar();
+                        } catch (err) {
+                            alert("Error al eliminar cliente: " + err.message);
+                        }
+                    }
                 });
             });
         };
@@ -792,7 +818,8 @@ class UI_SistemaMantenimiento {
                     <td>${t.correo}</td>
                     <td>${t.telefono}</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-primary btn-editar-tec" data-correo="${t.correo}"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-outline-primary btn-editar-tec" data-correo="${t.correo}" title="Editar"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-outline-danger btn-eliminar-tec" data-correo="${t.correo}" data-nombre="${t.nombre}" title="Eliminar"><i class="bi bi-trash"></i></button>
                     </td>
                 `;
                 tablaBody.appendChild(tr);
@@ -811,7 +838,8 @@ class UI_SistemaMantenimiento {
             document.querySelectorAll('.btn-eliminar-tec').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const correo = btn.getAttribute('data-correo');
-                    if (confirm(`¿Está seguro de eliminar al técnico ${correo}?`)) {
+                    const nombre = btn.getAttribute('data-nombre') || correo;
+                    if (confirm(`¿Está seguro de eliminar al técnico ${nombre}? Se eliminarán también sus mantenimientos asociados.`)) {
                         try {
                             this.controlador.gestionarCRUDTecnico({ accion: 'eliminar', correo });
                             cargarYRenderizar();
@@ -1518,6 +1546,8 @@ class UI_SistemaMantenimiento {
         const formTecnico = document.getElementById('form-tecnico');
         if (!formTecnico) return;
 
+        this.actualizarDatalistEspecialidades();
+
         const params = new URLSearchParams(window.location.search);
         const correo = params.get('correo');
 
@@ -1548,9 +1578,9 @@ class UI_SistemaMantenimiento {
                 window.location.href = 'tecnicos.html';
             }
         } else {
-            breadcrumbAction.textContent = 'Registrar Técnico';
-            formTitle.textContent = 'Registrar Nuevo Técnico';
-            document.getElementById('tec-correo').readOnly = false;
+            alert("El registro de nuevos técnicos debe realizarse desde la sección 'Registrar Personal'.");
+            window.location.href = 'registrar-personal.html';
+            return;
         }
 
         formTecnico.addEventListener('submit', (e) => {
@@ -1586,6 +1616,78 @@ class UI_SistemaMantenimiento {
                 alert("Error al guardar técnico: " + err.message);
             }
         });
+    }
+
+    /**
+     * Llena dinámicamente el datalist de especialidades con las especialidades de los técnicos cargados.
+     */
+    actualizarDatalistEspecialidades() {
+        const datalists = document.querySelectorAll('#especialidades-list');
+        if (datalists.length === 0) return;
+        try {
+            const tecnicos = this.controlador.gestionarCRUDTecnico({ accion: 'listar' });
+            const specs = [...new Set(tecnicos.map(t => t.especialidad).filter(Boolean))];
+            datalists.forEach(datalist => {
+                datalist.innerHTML = '';
+                specs.forEach(spec => {
+                    const option = document.createElement('option');
+                    option.value = spec;
+                    datalist.appendChild(option);
+                });
+            });
+        } catch (err) {
+            console.warn("No se pudieron cargar especialidades para el autocompletado:", err.message);
+        }
+    }
+
+    /**
+     * Lógica para administradores.html
+     */
+    mostrarPantallaAdministradores() {
+        const tablaBody = document.getElementById('tabla-administradores-body');
+        const searchInput = document.getElementById('buscar-administrador');
+
+        if (!tablaBody) return;
+
+        const renderTable = (adminsList) => {
+            tablaBody.innerHTML = '';
+            if (adminsList.length === 0) {
+                tablaBody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">No hay administradores registrados.</td></tr>`;
+                return;
+            }
+
+            adminsList.forEach(a => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${a.nombre}</strong></td>
+                    <td>${a.usuario}</td>
+                    <td><span class="badge bg-primary">${a.rol}</span></td>
+                `;
+                tablaBody.appendChild(tr);
+            });
+        };
+
+        const cargarYRenderizar = () => {
+            try {
+                const admins = this.controlador.obtenerAdministradores();
+                renderTable(admins);
+                this.actualizarConsolaLogs();
+            } catch (err) {
+                tablaBody.innerHTML = `<tr><td colspan="3" class="text-danger text-center">Acceso no autorizado: Solo Administradores pueden ver esta sección.</td></tr>`;
+            }
+        };
+
+        searchInput?.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const todos = this.controlador.obtenerAdministradores();
+            const filtrados = todos.filter(a => 
+                a.nombre.toLowerCase().includes(query) || 
+                a.usuario.toLowerCase().includes(query)
+            );
+            renderTable(filtrados);
+        });
+
+        cargarYRenderizar();
     }
 
     mostrarPantallaEditarMantenimiento() {
@@ -2309,41 +2411,62 @@ class UI_SistemaMantenimiento {
         const form = document.getElementById('form-registrar-personal-page');
         if (!form) return;
 
-        // Auto-generation of username and password as user types names and date of birth
-        const nameInputs = document.querySelectorAll('.name-input');
-        const updateUsername = () => {
+        this.actualizarDatalistEspecialidades();
+
+        const normalizarTexto = (texto) => texto
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim()
+            .toLowerCase();
+
+        const generarUsuario = () => {
             const pNombre = document.getElementById('pers-primer-nombre').value.trim();
             const sNombre = document.getElementById('pers-segundo-nombre').value.trim();
             const pApellido = document.getElementById('pers-primer-apellido').value.trim();
 
-            let usuario = '';
-            if (pNombre && pApellido) {
-                const init1 = pNombre.charAt(0).toLowerCase();
-                const init2 = sNombre ? sNombre.charAt(0).toLowerCase() : '';
-                const apellido = pApellido.toLowerCase();
-                usuario = init1 + init2 + apellido;
+            if (!pNombre || !pApellido) {
+                return '';
             }
-            document.getElementById('pers-usuario').value = usuario;
+
+            const init1 = normalizarTexto(pNombre).charAt(0);
+            const init2 = sNombre ? normalizarTexto(sNombre).charAt(0) : '';
+            const apellido = normalizarTexto(pApellido).replace(/\s+/g, '');
+
+            return `${init1}${init2}${apellido}`;
         };
+
+        const generarClave = () => {
+            const fechaNac = document.getElementById('pers-fecha-nacimiento').value;
+            if (!fechaNac) {
+                return '';
+            }
+
+            const parts = fechaNac.split('-');
+            if (parts.length !== 3) {
+                return '';
+            }
+
+            const year = parts[0].slice(2);
+            const month = parts[1];
+            const day = parts[2];
+            return `${day}${month}${year}`;
+        };
+
+        const sincronizarCredenciales = () => {
+            document.getElementById('pers-usuario').value = generarUsuario();
+            document.getElementById('pers-clave').value = generarClave();
+        };
+
+        // Auto-generation of username and password as user types names and date of birth
+        const nameInputs = document.querySelectorAll('.name-input');
+        const updateUsername = sincronizarCredenciales;
 
         nameInputs.forEach(input => {
             input.addEventListener('input', updateUsername);
         });
 
         const dobInput = document.getElementById('pers-fecha-nacimiento');
-        dobInput.addEventListener('change', () => {
-            const fechaNac = dobInput.value; // "YYYY-MM-DD"
-            if (fechaNac) {
-                const parts = fechaNac.split('-');
-                if (parts.length === 3) {
-                    const y = parts[0].substring(2); // last 2 digits of year
-                    const m = parts[1]; // month
-                    const d = parts[2]; // day
-                    const contrasena = d + m + y; // "DDMMYY"
-                    document.getElementById('pers-clave').value = contrasena;
-                }
-            }
-        });
+        dobInput.addEventListener('change', sincronizarCredenciales);
 
         // Hide/Show specialty according to role
         document.getElementById('pers-rol').addEventListener('change', (e) => {
@@ -2374,15 +2497,22 @@ class UI_SistemaMantenimiento {
             
             // Full name format
             const nombre = `${pNombre} ${sNombre} ${pApellido} ${sApellido}`.replace(/\s+/g, ' ').trim();
-            const usuario = document.getElementById('pers-usuario').value.trim();
             const correo = document.getElementById('pers-correo').value.trim();
             const telefono = document.getElementById('pers-telefono').value.trim();
             const especialidad = document.getElementById('pers-especialidad').value.trim();
+            sincronizarCredenciales();
+            const usuario = document.getElementById('pers-usuario').value.trim();
             const clave = document.getElementById('pers-clave').value;
+
+            if (!usuario || !clave) {
+                errorDiv.textContent = 'Complete nombre, apellido y fecha de nacimiento para generar usuario y contraseña.';
+                errorDiv.classList.remove('d-none');
+                return;
+            }
 
             try {
                 // Register user via database repo adapter
-                this.controlador.repo.registrarClientePublico({
+                const resultadoRegistro = this.controlador.repo.registrarClientePublico({
                     nombre,
                     usuario,
                     password: clave,
@@ -2392,16 +2522,12 @@ class UI_SistemaMantenimiento {
                     especialidad: rol === 'Técnico' ? especialidad : undefined
                 });
 
-                // Send email using Bridge/EmailJS pattern
-                if (typeof GestorNotificaciones !== 'undefined' && typeof ProveedorCorreo !== 'undefined') {
-                    const gestor = new GestorNotificaciones();
-                    gestor.setProveedor(new ProveedorCorreo());
-                    await gestor.notificarCliente(
-                        { nombre, correo }, 
-                        `Tu usuario de ingreso es: ${usuario} y tu contraseña temporal es: ${clave}.`
-                    );
-                } else {
-                    console.warn("Notification classes are not available.");
+                if (resultadoRegistro && resultadoRegistro.correoEnviado === false) {
+                    errorDiv.textContent = resultadoRegistro.correoError
+                        ? `El usuario fue registrado, pero no se pudo enviar el correo: ${resultadoRegistro.correoError}`
+                        : 'El usuario fue registrado, pero no se pudo enviar el correo con las credenciales.';
+                    errorDiv.classList.remove('d-none');
+                    return;
                 }
 
                 // Register security audit log locally
