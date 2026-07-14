@@ -1859,7 +1859,7 @@ class UI_SistemaMantenimiento {
             const accion = esEdicion ? 'editar' : 'crear';
             
             // Preguntar canal de notificación
-            const canal = confirm("¿Desea enviar notificaciones de este cambio al cliente por Correo Electrónico? (Cancelar = WhatsApp)") ? 'Correo' : 'WhatsApp';
+            const canal = 'Correo';
 
             try {
                 this.controlador.registrarMantenimiento({ 
