@@ -48,13 +48,17 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="cli-correo" class="form-label small fw-semibold text-secondary">Correo Electrónico</label>
                             <input type="email" class="form-control" id="cli-correo" placeholder="ej. juan.perez@mail.com" required>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="cli-telefono" class="form-label small fw-semibold text-secondary">Teléfono de Contacto</label>
                             <input type="text" class="form-control" id="cli-telefono" placeholder="ej. 0987654321" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="cli-fecha-nacimiento" class="form-label small fw-semibold text-secondary">Fecha de Nacimiento</label>
+                            <input type="date" class="form-control" id="cli-fecha-nacimiento" required>
                         </div>
                     </div>
                     <div class="mb-4" id="group-cli-usuario">
@@ -73,6 +77,7 @@
     </div>
 
     <!-- Cargar Scripts en Orden de Dependencia -->
+    <script src="js/utils/validacion.js"></script>
     <script src="js/data/repositorio.js"></script>
     <script src="js/patterns/composite.js"></script>
     <script src="js/patterns/bridge.js"></script>

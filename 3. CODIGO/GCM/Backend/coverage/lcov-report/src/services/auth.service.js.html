@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">66.66% </span>
+                <span class="strong">65.27% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>42/63</span>
+                <span class='fraction'>47/72</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">64.91% </span>
+                <span class="strong">59.45% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>37/57</span>
+                <span class='fraction'>44/74</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">66.66% </span>
+                <span class="strong">65.27% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>42/63</span>
+                <span class='fraction'>47/72</span>
             </div>
         
             
@@ -229,12 +229,44 @@
 <a name='L164'></a><a href='#L164'>164</a>
 <a name='L165'></a><a href='#L165'>165</a>
 <a name='L166'></a><a href='#L166'>166</a>
-<a name='L167'></a><a href='#L167'>167</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
+<a name='L167'></a><a href='#L167'>167</a>
+<a name='L168'></a><a href='#L168'>168</a>
+<a name='L169'></a><a href='#L169'>169</a>
+<a name='L170'></a><a href='#L170'>170</a>
+<a name='L171'></a><a href='#L171'>171</a>
+<a name='L172'></a><a href='#L172'>172</a>
+<a name='L173'></a><a href='#L173'>173</a>
+<a name='L174'></a><a href='#L174'>174</a>
+<a name='L175'></a><a href='#L175'>175</a>
+<a name='L176'></a><a href='#L176'>176</a>
+<a name='L177'></a><a href='#L177'>177</a>
+<a name='L178'></a><a href='#L178'>178</a>
+<a name='L179'></a><a href='#L179'>179</a>
+<a name='L180'></a><a href='#L180'>180</a>
+<a name='L181'></a><a href='#L181'>181</a>
+<a name='L182'></a><a href='#L182'>182</a>
+<a name='L183'></a><a href='#L183'>183</a>
+<a name='L184'></a><a href='#L184'>184</a>
+<a name='L185'></a><a href='#L185'>185</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
@@ -254,6 +286,9 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -294,6 +329,7 @@
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -400,11 +436,25 @@ const jwt = require("jsonwebtoken");
 const usuarioRepository = require("../repositories/usuario.repository");
 const clienteRepository = require("../repositories/cliente.repository");
 const emailService = require("./email.service");
+const { validarCedulaEcuatoriana, validarTelefonoEcuatoriano, validarEdadPermitida } = require("../utils/validation");
 &nbsp;
 class AuthService {
-    async register(nombre, usuario, password, rol = <span class="branch-0 cbranch-no" title="branch not covered" >"Cliente",</span> cedula = <span class="branch-0 cbranch-no" title="branch not covered" >null,</span> correo = "", telefono = "", especialidad = "") {
+    async register(nombre, usuario, password, rol = <span class="branch-0 cbranch-no" title="branch not covered" >"Cliente",</span> cedula = <span class="branch-0 cbranch-no" title="branch not covered" >null,</span> correo = <span class="branch-0 cbranch-no" title="branch not covered" >"",</span> telefono = <span class="branch-0 cbranch-no" title="branch not covered" >"",</span> especialidad = <span class="branch-0 cbranch-no" title="branch not covered" >"",</span> fechaNacimiento = <span class="branch-0 cbranch-no" title="branch not covered" >null)</span> {
         <span class="missing-if-branch" title="if path not taken" >I</span>if (!nombre || !usuario || !password) {
 <span class="cstat-no" title="statement not covered" >            throw new Error("Todos los campos (nombre, usuario, password) son obligatorios.");</span>
+        }
+&nbsp;
+        // Validaciones generales
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (correo &amp;&amp; !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+<span class="cstat-no" title="statement not covered" >            throw new Error("El correo electrónico no tiene un formato válido.");</span>
+        }
+&nbsp;
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (telefono &amp;&amp; !validarTelefonoEcuatoriano(telefono)) {
+<span class="cstat-no" title="statement not covered" >            throw new Error("El número de teléfono celular no es válido. Debe tener 10 dígitos y empezar con 09.");</span>
+        }
+&nbsp;
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (fechaNacimiento &amp;&amp; !validarEdadPermitida(fechaNacimiento)) {
+<span class="cstat-no" title="statement not covered" >            throw new Error("La edad permitida para el registro debe estar entre 18 y 100 años.");</span>
         }
 &nbsp;
         const existingUser = await usuarioRepository.findByUsuario(usuario);
@@ -419,6 +469,9 @@ class AuthService {
             <span class="missing-if-branch" title="if path not taken" >I</span>if (!cedula) {
 <span class="cstat-no" title="statement not covered" >                throw new Error("La cédula es obligatoria para registrarse como cliente.");</span>
             }
+            <span class="missing-if-branch" title="if path not taken" >I</span>if (!validarCedulaEcuatoriana(cedula)) {
+<span class="cstat-no" title="statement not covered" >                throw new Error("La cédula ingresada no es válida.");</span>
+            }
             const existingCliente = await clienteRepository.findByCedula(cedula);
             <span class="missing-if-branch" title="if path not taken" >I</span>if (existingCliente) {
 <span class="cstat-no" title="statement not covered" >                throw new Error("La cédula ya está registrada en el sistema.");</span>
@@ -428,7 +481,7 @@ class AuthService {
             await clienteRepository.create({
                 cedula,
                 nombre,
-                telefono: telefono || "",
+                telefono: telefono || <span class="branch-1 cbranch-no" title="branch not covered" >"",</span>
                 correo: correo || "",
                 direccion: ""
             });
@@ -465,7 +518,8 @@ class AuthService {
             password: hashedPassword,
             rol,
             cedula,
-            debeCambiarPw
+            debeCambiarPw,
+            fechaNacimiento: fechaNacimiento ? new Date(fechaNacimiento) : <span class="branch-1 cbranch-no" title="branch not covered" >null</span>
         });
 &nbsp;
         let correoEnviado = false;
@@ -568,7 +622,7 @@ module.exports = new AuthService();
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-13T16:35:09.075Z
+                at 2026-07-14T14:40:02.820Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

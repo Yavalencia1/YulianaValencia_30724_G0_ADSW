@@ -8,13 +8,14 @@ datasource db {
 }
 
 model Usuario {
-  id             Int      @id @default(autoincrement())
+  id             Int       @id @default(autoincrement())
   nombre         String
-  usuario        String   @unique
+  usuario        String    @unique
   password       String
-  rol            String   @default("Cliente")
+  rol            String    @default("Cliente")
   cedula         String?
-  debeCambiarPw  Boolean  @default(false)
+  debeCambiarPw  Boolean   @default(false)
+  fechaNacimiento DateTime?
 }
 
 model Cliente {
@@ -45,7 +46,8 @@ model Mantenimiento {
   tipo          String
   descripcion   String
 
-  fecha         DateTime
+  fechaIngreso  DateTime
+  fechaEntrega  DateTime
 
   estado        String
 

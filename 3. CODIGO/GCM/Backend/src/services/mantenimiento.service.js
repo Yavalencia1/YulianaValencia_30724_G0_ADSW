@@ -4,10 +4,20 @@ const tecnicoRepository = require("../repositories/tecnico.repository");
 
 class MantenimientoService {
     async createMantenimiento(data) {
-        const { tipo, descripcion, fecha, estado, costo, clienteId, tecnicoId } = data;
+        const { tipo, descripcion, fechaIngreso, fechaEntrega, estado, costo, clienteId, tecnicoId } = data;
 
-        if (!tipo || !descripcion || !fecha || !estado || costo === undefined || !clienteId || !tecnicoId) {
+        if (!tipo || !descripcion || !fechaIngreso || !fechaEntrega || !estado || costo === undefined || !clienteId || !tecnicoId) {
             throw new Error("Todos los campos obligatorios para el mantenimiento deben ser proporcionados.");
+        }
+
+        const dIngreso = new Date(fechaIngreso);
+        const dEntrega = new Date(fechaEntrega);
+
+        dIngreso.setUTCHours(0, 0, 0, 0);
+        dEntrega.setUTCHours(0, 0, 0, 0);
+
+        if (dEntrega < dIngreso) {
+            throw new Error("La fecha de entrega no puede ser anterior a la fecha de ingreso.");
         }
 
         // Validar si el cliente existe
@@ -25,7 +35,8 @@ class MantenimientoService {
         return await mantenimientoRepository.create({
             tipo,
             descripcion,
-            fecha: new Date(fecha),
+            fechaIngreso: new Date(fechaIngreso),
+            fechaEntrega: new Date(fechaEntrega),
             estado,
             costo: parseFloat(costo),
             clienteId: parseInt(clienteId),
@@ -54,12 +65,28 @@ class MantenimientoService {
     }
 
     async updateMantenimiento(id, data) {
-        await this.getMantenimientoById(id); // Verificar existencia
+        const currentMnt = await this.getMantenimientoById(id); // Verificar existencia
 
         const updateData = { ...data };
-        if (updateData.fecha) {
-            updateData.fecha = new Date(updateData.fecha);
+        if (updateData.fechaIngreso) {
+            updateData.fechaIngreso = new Date(updateData.fechaIngreso);
         }
+        if (updateData.fechaEntrega) {
+            updateData.fechaEntrega = new Date(updateData.fechaEntrega);
+        }
+
+        const dIngreso = updateData.fechaIngreso || new Date(currentMnt.fechaIngreso);
+        const dEntrega = updateData.fechaEntrega || new Date(currentMnt.fechaEntrega);
+
+        const checkIngreso = new Date(dIngreso);
+        const checkEntrega = new Date(dEntrega);
+        checkIngreso.setUTCHours(0, 0, 0, 0);
+        checkEntrega.setUTCHours(0, 0, 0, 0);
+
+        if (checkEntrega < checkIngreso) {
+            throw new Error("La fecha de entrega no puede ser anterior a la fecha de ingreso.");
+        }
+
         if (updateData.costo !== undefined) {
             updateData.costo = parseFloat(updateData.costo);
         }

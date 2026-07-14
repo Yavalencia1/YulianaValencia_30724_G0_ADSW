@@ -3,11 +3,25 @@ const jwt = require("jsonwebtoken");
 const usuarioRepository = require("../repositories/usuario.repository");
 const clienteRepository = require("../repositories/cliente.repository");
 const emailService = require("./email.service");
+const { validarCedulaEcuatoriana, validarTelefonoEcuatoriano, validarEdadPermitida } = require("../utils/validation");
 
 class AuthService {
-    async register(nombre, usuario, password, rol = "Cliente", cedula = null, correo = "", telefono = "", especialidad = "") {
+    async register(nombre, usuario, password, rol = "Cliente", cedula = null, correo = "", telefono = "", especialidad = "", fechaNacimiento = null) {
         if (!nombre || !usuario || !password) {
             throw new Error("Todos los campos (nombre, usuario, password) son obligatorios.");
+        }
+
+        // Validaciones generales
+        if (correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+            throw new Error("El correo electrónico no tiene un formato válido.");
+        }
+
+        if (telefono && !validarTelefonoEcuatoriano(telefono)) {
+            throw new Error("El número de teléfono celular no es válido. Debe tener 10 dígitos y empezar con 09.");
+        }
+
+        if (fechaNacimiento && !validarEdadPermitida(fechaNacimiento)) {
+            throw new Error("La edad permitida para el registro debe estar entre 18 y 100 años.");
         }
 
         const existingUser = await usuarioRepository.findByUsuario(usuario);
@@ -21,6 +35,9 @@ class AuthService {
         if (rol === "Cliente") {
             if (!cedula) {
                 throw new Error("La cédula es obligatoria para registrarse como cliente.");
+            }
+            if (!validarCedulaEcuatoriana(cedula)) {
+                throw new Error("La cédula ingresada no es válida.");
             }
             const existingCliente = await clienteRepository.findByCedula(cedula);
             if (existingCliente) {
@@ -68,7 +85,8 @@ class AuthService {
             password: hashedPassword,
             rol,
             cedula,
-            debeCambiarPw
+            debeCambiarPw,
+            fechaNacimiento: fechaNacimiento ? new Date(fechaNacimiento) : null
         });
 
         let correoEnviado = false;

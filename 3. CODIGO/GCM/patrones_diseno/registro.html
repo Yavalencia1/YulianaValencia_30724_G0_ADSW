@@ -76,6 +76,14 @@
                                 <input type="text" class="form-control border-start-0 ps-0" id="txt-telefono" placeholder="ej. 0987654321" required>
                             </div>
                         </div>
+                        <!-- Fecha de Nacimiento -->
+                        <div class="col-md-6 mb-3">
+                            <label for="txt-fecha-nacimiento" class="form-label small fw-semibold text-secondary">Fecha de Nacimiento</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-calendar"></i></span>
+                                <input type="date" class="form-control border-start-0 ps-0" id="txt-fecha-nacimiento" required>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="row">
@@ -114,6 +122,7 @@
     </div>
 
     <!-- Cargar Scripts en Orden de Dependencia -->
+    <script src="js/utils/validacion.js"></script>
     <script src="js/data/repositorio.js"></script>
     <script src="js/patterns/composite.js"></script>
     <script src="js/patterns/bridge.js"></script>

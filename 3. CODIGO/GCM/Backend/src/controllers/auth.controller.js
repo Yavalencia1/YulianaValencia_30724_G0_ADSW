@@ -3,7 +3,7 @@ const authService = require("../services/auth.service");
 class AuthController {
     async register(req, res, next) {
         try {
-            const { nombre, usuario, password, rol, cedula, correo, telefono, especialidad } = req.body;
+            const { nombre, usuario, password, rol, cedula, correo, telefono, especialidad, fechaNacimiento } = req.body;
 
             // Restricción de seguridad: Solo un Administrador autenticado puede crear usuarios con roles especiales
             let targetRol = "Cliente";
@@ -35,7 +35,7 @@ class AuthController {
                 }
             }
 
-            const newUser = await authService.register(nombre, usuario, password, targetRol, cedula, correo, telefono, especialidad);
+            const newUser = await authService.register(nombre, usuario, password, targetRol, cedula, correo, telefono, especialidad, fechaNacimiento);
             return res.status(201).json({
                 ok: true,
                 data: newUser

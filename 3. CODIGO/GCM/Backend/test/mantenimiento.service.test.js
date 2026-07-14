@@ -29,7 +29,8 @@ describe("MantenimientoService", () => {
         const resultado = await mantenimientoService.createMantenimiento({
             tipo: "Preventivo",
             descripcion: "Cambio de pasta térmica",
-            fecha: "2026-07-09",
+            fechaIngreso: "2026-07-09",
+            fechaEntrega: "2026-07-10",
             estado: "Pendiente",
             costo: 50,
             clienteId: 1,
@@ -49,7 +50,8 @@ describe("MantenimientoService", () => {
             mantenimientoService.createMantenimiento({
                 tipo: "Preventivo",
                 descripcion: "Cambio",
-                fecha: "2026-07-09",
+                fechaIngreso: "2026-07-09",
+                fechaEntrega: "2026-07-10",
                 estado: "Pendiente",
                 costo: 50,
                 clienteId: 1,
@@ -73,7 +75,8 @@ describe("MantenimientoService", () => {
             mantenimientoService.createMantenimiento({
                 tipo: "Preventivo",
                 descripcion: "Cambio",
-                fecha: "2026-07-09",
+                fechaIngreso: "2026-07-09",
+                fechaEntrega: "2026-07-10",
                 estado: "Pendiente",
                 costo: 50,
                 clienteId: 1,
@@ -153,6 +156,39 @@ describe("MantenimientoService", () => {
         expect(mantenimientoRepository.delete)
             .toHaveBeenCalled();
 
+    });
+
+    test("Debe impedir crear mantenimiento si fecha de entrega es anterior a fecha de ingreso", async () => {
+        await expect(
+            mantenimientoService.createMantenimiento({
+                tipo: "Preventivo",
+                descripcion: "Cambio",
+                fechaIngreso: "2026-07-10",
+                fechaEntrega: "2026-07-09",
+                estado: "Pendiente",
+                costo: 50,
+                clienteId: 1,
+                tecnicoId: 1
+            })
+        ).rejects.toThrow(
+            "La fecha de entrega no puede ser anterior a la fecha de ingreso."
+        );
+    });
+
+    test("Debe impedir actualizar mantenimiento si fecha de entrega es anterior a fecha de ingreso", async () => {
+        mantenimientoRepository.findById.mockResolvedValue({
+            id: 1,
+            fechaIngreso: new Date("2026-07-10"),
+            fechaEntrega: new Date("2026-07-12")
+        });
+
+        await expect(
+            mantenimientoService.updateMantenimiento(1, {
+                fechaEntrega: "2026-07-09"
+            })
+        ).rejects.toThrow(
+            "La fecha de entrega no puede ser anterior a la fecha de ingreso."
+        );
     });
 
 });

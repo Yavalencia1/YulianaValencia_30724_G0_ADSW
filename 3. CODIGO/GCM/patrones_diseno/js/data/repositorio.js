@@ -162,7 +162,8 @@ class RepositorioBaseDatos {
         const payload = {
             tipo: mantenimiento.tipoEquipo || "General",
             descripcion: `${mantenimiento.equipo} (${mantenimiento.marca} ${mantenimiento.modelo}). Obs: ${mantenimiento.costos?.observaciones || ""}`,
-            fecha: mantenimiento.fechaRegistro ? new Date(mantenimiento.fechaRegistro) : new Date(),
+            fechaIngreso: mantenimiento.fechaRegistro ? new Date(mantenimiento.fechaRegistro) : new Date(),
+            fechaEntrega: mantenimiento.costos?.fechaEstimadaEntrega ? new Date(mantenimiento.costos.fechaEstimadaEntrega) : new Date(),
             estado: mantenimiento.costos?.estado || "Recibido",
             costo: parseFloat(mantenimiento.costos?.totalMantenimiento || 0),
             clienteId: cliente.id,
@@ -218,7 +219,7 @@ class RepositorioBaseDatos {
 
         return {
             idMantenimiento: `MNT-${m.id.toString().padStart(6, '0')}`,
-            fechaRegistro: m.fecha ? m.fecha.split('T')[0] : new Date().toISOString().split('T')[0],
+            fechaRegistro: m.fechaIngreso ? m.fechaIngreso.split('T')[0] : new Date().toISOString().split('T')[0],
             equipo: equipo,
             modelo: modelo,
             marca: marca,
@@ -242,7 +243,7 @@ class RepositorioBaseDatos {
                 totalMantenimiento: m.costo,
                 abono: m.costo,
                 saldo: 0,
-                fechaEstimadaEntrega: m.fecha ? m.fecha.split('T')[0] : new Date().toISOString().split('T')[0],
+                fechaEstimadaEntrega: m.fechaEntrega ? m.fechaEntrega.split('T')[0] : new Date().toISOString().split('T')[0],
                 estado: m.estado
             },
             cedulaCliente: m.cliente?.cedula || "",

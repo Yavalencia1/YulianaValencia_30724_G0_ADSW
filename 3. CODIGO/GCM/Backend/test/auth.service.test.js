@@ -50,7 +50,7 @@ test("Debe registrar un cliente correctamente", async () => {
 
         clienteRepository.create.mockResolvedValue({
             id: 1,
-            cedula: "1720000000",
+            cedula: "1710034065",
             nombre: "Sebastian"
         });
 
@@ -59,7 +59,11 @@ test("Debe registrar un cliente correctamente", async () => {
             "sebastian",
             "123456",
             "Cliente",
-            "1720000000"
+            "1710034065",
+            "",
+            "0999999999",
+            null,
+            "1995-05-15"
         );
 
         expect(resultado.usuario).toBe("sebastian");
@@ -99,7 +103,8 @@ test("Debe registrar un cliente correctamente", async () => {
             null,
             "ana.torres@mail.com",
             "0999999999",
-            "Reparación"
+            "Reparación",
+            "1995-05-15"
         );
 
         expect(emailService.sendCredentialsEmail).toHaveBeenCalledWith({
@@ -127,7 +132,11 @@ test("Debe registrar un cliente correctamente", async () => {
             "sebastian",
             "123456",
             "Cliente",
-            "1720000000"
+            "1710034065",
+            "test@mail.com",
+            "0999999999",
+            null,
+            "1995-05-15"
         )
 
     ).rejects.toThrow(

@@ -106,7 +106,8 @@ async function main() {
         data: {
             tipo: "Celular",
             descripcion: "iPhone 13 Pro - Falla en pin de carga y módulo de cámara principal rayado. No se conecta a redes Wi-Fi.",
-            fecha: new Date("2026-06-01"),
+            fechaIngreso: new Date("2026-06-01"),
+            fechaEntrega: new Date("2026-06-05"),
             estado: "En Reparación",
             costo: 150.00,
             clienteId: cliente1.id,
@@ -118,7 +119,8 @@ async function main() {
         data: {
             tipo: "Tablet",
             descripcion: "iPad Air 5 - Pantalla trisada y Touch ID inoperable debido al golpe.",
-            fecha: new Date("2026-06-05"),
+            fechaIngreso: new Date("2026-06-05"),
+            fechaEntrega: new Date("2026-06-10"),
             estado: "Listo para Entrega",
             costo: 220.00,
             clienteId: cliente1.id,
@@ -130,7 +132,8 @@ async function main() {
         data: {
             tipo: "Laptop",
             descripcion: "Laptop XPS 15 - No enciende. Posible cortocircuito en placa madre después de sobretensión eléctrica.",
-            fecha: new Date("2026-06-10"),
+            fechaIngreso: new Date("2026-06-10"),
+            fechaEntrega: new Date("2026-06-15"),
             estado: "Recibido",
             costo: 350.00,
             clienteId: cliente2.id,

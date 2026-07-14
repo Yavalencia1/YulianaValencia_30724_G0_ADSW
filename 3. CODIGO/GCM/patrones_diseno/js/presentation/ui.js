@@ -205,6 +205,15 @@ class UI_SistemaMantenimiento {
         const path = window.location.pathname;
         const pagina = path.substring(path.lastIndexOf('/') + 1);
 
+        // Si es rol Cliente, prohibir acceso a páginas administrativas
+        if (this.controlador.sesionActiva && this.controlador.sesionActiva.rol === 'Cliente') {
+            const paginasPermitidas = ['mantenimientos.html', 'cambiar-contrasena.html', 'login.html', 'registro.html', 'index.html', ''];
+            if (!paginasPermitidas.includes(pagina)) {
+                window.location.href = 'mantenimientos.html';
+                return;
+            }
+        }
+
         // Si no hay sesión y no estamos en login.html o registro.html, redirigir a login
         if (!this.controlador.sesionActiva && pagina !== 'login.html' && pagina !== 'registro.html') {
             window.location.href = 'login.html';
@@ -636,6 +645,7 @@ class UI_SistemaMantenimiento {
             const usuario = document.getElementById('txt-usuario').value.trim();
             const correo = document.getElementById('txt-correo').value.trim();
             const telefono = document.getElementById('txt-telefono').value.trim();
+            const fechaNacimiento = document.getElementById('txt-fecha-nacimiento').value;
             const clave = document.getElementById('txt-clave').value;
             const confirmarClave = document.getElementById('txt-confirmar-clave').value;
             const feedback = document.getElementById('registro-feedback');
@@ -644,9 +654,33 @@ class UI_SistemaMantenimiento {
             feedback.classList.add('d-none');
             exito.classList.add('d-none');
 
-            if (!cedula || !nombre || !usuario || !correo || !telefono || !clave || !confirmarClave) {
+            if (!cedula || !nombre || !usuario || !correo || !telefono || !fechaNacimiento || !clave || !confirmarClave) {
                 feedback.classList.remove('d-none');
                 feedback.textContent = 'Todos los campos son obligatorios.';
+                return;
+            }
+
+            if (!validarCedulaEcuatoriana(cedula)) {
+                feedback.classList.remove('d-none');
+                feedback.textContent = 'La cédula ingresada no es válida.';
+                return;
+            }
+
+            if (!validarTelefonoEcuatoriano(telefono)) {
+                feedback.classList.remove('d-none');
+                feedback.textContent = 'El número de teléfono celular no es válido. Debe tener 10 dígitos y empezar con 09.';
+                return;
+            }
+
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+                feedback.classList.remove('d-none');
+                feedback.textContent = 'Ingrese un correo electrónico válido.';
+                return;
+            }
+
+            if (!validarEdadPermitida(fechaNacimiento)) {
+                feedback.classList.remove('d-none');
+                feedback.textContent = 'La edad permitida para el registro debe estar entre 18 y 100 años.';
                 return;
             }
 
@@ -670,7 +704,8 @@ class UI_SistemaMantenimiento {
                     rol: 'Cliente',
                     cedula,
                     correo,
-                    telefono
+                    telefono,
+                    fechaNacimiento
                 });
 
                 exito.classList.remove('d-none');
@@ -953,8 +988,8 @@ class UI_SistemaMantenimiento {
                     <td>
                         <div class="btn-group">
                             <button class="btn btn-sm btn-outline-info btn-ver-detalles" data-id="${m.idMantenimiento}" title="Ver detalles y fallas"><i class="bi bi-eye"></i></button>
-                            <button class="btn btn-sm btn-outline-secondary btn-imprimir-fila" data-id="${m.idMantenimiento}" title="Imprimir Ficha Técnica"><i class="bi bi-printer"></i></button>
                             ${sesion.rol !== 'Cliente' ? `
+                                <button class="btn btn-sm btn-outline-secondary btn-imprimir-fila" data-id="${m.idMantenimiento}" title="Imprimir Ficha Técnica"><i class="bi bi-printer"></i></button>
                                 <button class="btn btn-sm btn-outline-primary btn-editar-mnt" data-id="${m.idMantenimiento}" title="Editar ficha completa"><i class="bi bi-pencil"></i></button>
                                 <button class="btn btn-sm btn-outline-warning btn-estado-quick" data-id="${m.idMantenimiento}" title="Cambiar Estado Rápido"><i class="bi bi-arrow-repeat"></i></button>
                             ` : ''}
@@ -985,7 +1020,7 @@ class UI_SistemaMantenimiento {
                     const mntFicha = Array.isArray(mnt) ? mnt.find(m => m.idMantenimiento === id) : mnt;
                     
                     if (mntFicha) {
-                        this.mostrarModalDetalles(mntFicha);
+                        this.mostrarDetalleFicha(mntFicha);
                     }
                 });
             });
@@ -1013,24 +1048,7 @@ class UI_SistemaMantenimiento {
                     const mnt = this.controlador.registrarMantenimiento({ accion: 'buscarPorId', idMantenimiento: id });
                     
                     if (mnt) {
-                        const nuevoEstado = prompt(`Cambiar estado para ${id}. Estados disponibles:\n1. Recibido\n2. En Reparación\n3. Listo para Entrega\n4. Entregado\n\nEscriba el nuevo estado:`, mnt.costos.estado);
-                        
-                        if (nuevoEstado && ['Recibido', 'En Reparación', 'Listo para Entrega', 'Entregado'].includes(nuevoEstado)) {
-                            const canal = confirm("¿Desea enviar la notificación por Correo Electrónico? (Cancelar = WhatsApp)") ? 'Correo' : 'WhatsApp';
-                            try {
-                                this.controlador.registrarMantenimiento({
-                                    accion: 'actualizarEstado',
-                                    idMantenimiento: id,
-                                    nuevoEstado: nuevoEstado,
-                                    proveedorNotificacion: canal
-                                });
-                                cargarYRenderizar();
-                            } catch (err) {
-                                alert("Error: " + err.message);
-                            }
-                        } else if (nuevoEstado) {
-                            alert("Estado no válido. Operación cancelada.");
-                        }
+                        this.mostrarModalCambioEstadoRapido(mnt, cargarYRenderizar);
                     }
                 });
             });
@@ -1150,17 +1168,11 @@ class UI_SistemaMantenimiento {
     /**
      * Muestra una ventana modal de Bootstrap personalizada con todos los detalles de la ficha técnica.
      */
-    mostrarModalDetalles(mnt) {
-        // Buscar o crear contenedor para el modal de detalles
-        let modalDetalles = document.getElementById('modalDetallesMnt');
-        if (!modalDetalles) {
-            const div = document.createElement('div');
-            div.id = 'modalDetallesMnt';
-            div.className = 'modal fade';
-            div.setAttribute('tabindex', '-1');
-            document.body.appendChild(div);
-            modalDetalles = div;
-        }
+    mostrarDetalleFicha(mnt) {
+        const listaCard = document.getElementById('mantenimientos-lista-card');
+        const detalleCard = document.getElementById('mantenimiento-detalle-card');
+        
+        if (!listaCard || !detalleCard) return;
 
         // Checklist de daños
         let fallasHTML = '';
@@ -1177,14 +1189,13 @@ class UI_SistemaMantenimiento {
         };
 
         Object.keys(fallasClaves).forEach(key => {
-            const tieneFalla = !mnt.daños[key]; // Si es false, significa que el daño está presente o no funciona.
-            // Nota: En la persistencia guardamos true = funcional, false = dañado/averiado.
+            const tieneFalla = !mnt.daños[key];
             const icon = mnt.daños[key] 
                 ? '<i class="bi bi-check-circle-fill text-success"></i> Funciona' 
                 : '<i class="bi bi-exclamation-triangle-fill text-danger"></i> Reporta Daño';
 
             fallasHTML += `
-                <div class="col-6 mb-2">
+                <div class="col-md-4 col-sm-6 mb-2">
                     <div class="border rounded p-2 bg-light d-flex justify-content-between align-items-center">
                         <span class="small font-weight-bold">${fallasClaves[key]}</span>
                         <span class="small">${icon}</span>
@@ -1198,68 +1209,156 @@ class UI_SistemaMantenimiento {
         const tecnicos = this.controlador.repo.obtenerTecnicos();
         const tecnico = tecnicos.find(t => t.correo === mnt.tecnicoAsignado);
 
-        modalDetalles.innerHTML = `
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header modal-header-pres">
-                        <h5 class="modal-title"><i class="bi bi-file-earmark-text"></i> Ficha Técnica: ${mnt.idMantenimiento}</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body p-4">
-                        <div class="row">
-                            <div class="col-md-6 border-end">
-                                <h6 class="text-primary border-bottom pb-2 mb-3"><i class="bi bi-laptop"></i> Información del Dispositivo</h6>
-                                <p class="mb-1"><strong>Equipo:</strong> ${mnt.equipo}</p>
-                                <p class="mb-1"><strong>Marca/Modelo:</strong> ${mnt.marca} / ${mnt.modelo}</p>
-                                <p class="mb-1"><strong>Tipo de Dispositivo:</strong> ${mnt.tipoEquipo}</p>
-                                <p class="mb-1"><strong>N° Serie / IMEI:</strong> ${mnt.numeroSerieImei}</p>
-                                <p class="mb-1"><strong>Clave/PIN:</strong> <code class="text-dark">${mnt.clavePin}</code></p>
-                                <p class="mb-3"><strong>Accesorios:</strong> ${mnt.accesorios || 'Ninguno'}</p>
+        // Timeline generation logic (Recibido -> En Reparación -> Listo para Entrega -> Entregado)
+        const estados = ['Recibido', 'En Reparación', 'Listo para Entrega', 'Entregado'];
+        const estadoActual = mnt.costos.estado;
+        const indexActual = estados.indexOf(estadoActual);
 
-                                <h6 class="text-primary border-bottom pb-2 mb-3"><i class="bi bi-person"></i> Asignaciones y Contacto</h6>
-                                <p class="mb-1"><strong>Cliente:</strong> ${cliente ? cliente.nombre : 'Desconocido'} (${mnt.cedulaCliente})</p>
-                                <p class="mb-1"><strong>Teléfono Cliente:</strong> ${cliente ? cliente.telefono : 'N/A'}</p>
-                                <p class="mb-3"><strong>Técnico Asignado:</strong> ${tecnico ? tecnico.nombre : mnt.tecnicoAsignado}</p>
-                            </div>
-                            <div class="col-md-6 ps-md-4">
-                                <h6 class="text-primary border-bottom pb-2 mb-3"><i class="bi bi-cash-coin"></i> Estado Financiero y Entrega</h6>
-                                <div class="row text-center mb-3">
-                                    <div class="col-4 border-end">
-                                        <small class="text-muted d-block">Total</small>
-                                        <strong class="text-dark">$${mnt.costos.totalMantenimiento.toFixed(2)}</strong>
-                                    </div>
-                                    <div class="col-4 border-end">
-                                        <small class="text-muted d-block">Abono</small>
-                                        <strong class="text-primary">$${mnt.costos.abono.toFixed(2)}</strong>
-                                    </div>
-                                    <div class="col-4">
-                                        <small class="text-muted d-block">Saldo</small>
-                                        <strong class="text-danger">$${mnt.costos.saldo.toFixed(2)}</strong>
-                                    </div>
-                                </div>
-                                <p class="mb-1"><strong>Fecha Registro:</strong> ${mnt.fechaRegistro}</p>
-                                <p class="mb-1"><strong>Fecha Entrega:</strong> ${mnt.costos.fechaEstimadaEntrega || 'No definida'}</p>
-                                <p class="mb-3"><strong>Estado Actual:</strong> <span class="badge bg-secondary">${mnt.costos.estado}</span></p>
-                                
-                                <h6 class="text-primary border-bottom pb-2 mb-2"><i class="bi bi-chat-left-text"></i> Diagnóstico / Observaciones</h6>
-                                <p class="bg-light p-2 rounded small border text-muted" style="min-height: 60px;">${mnt.costos.observaciones || 'Sin observaciones registradas.'}</p>
-                            </div>
-                        </div>
-
-                        <h6 class="text-primary border-bottom pb-2 my-3"><i class="bi bi-check2-square"></i> Diagnóstico Inicial de Funcionalidad</h6>
-                        <div class="row">
-                            ${fallasHTML}
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar Ficha</button>
+        let timelineHTML = '';
+        if (estadoActual === 'Cancelado') {
+            timelineHTML = `
+                <div class="alert alert-danger d-flex align-items-center mb-0" role="alert">
+                    <i class="bi bi-x-circle-fill me-2 fs-5"></i>
+                    <div>
+                        <strong>Servicio Cancelado:</strong> Este mantenimiento ha sido cancelado y no continuará con el flujo de estados.
                     </div>
                 </div>
+            `;
+        } else {
+            // Horizontal/Vertical Timeline
+            let stepsHTML = '';
+            estados.forEach((est, idx) => {
+                let statusClass = '';
+                let checkIcon = idx + 1; // default step number
+
+                if (idx < indexActual) {
+                    statusClass = 'completed';
+                    checkIcon = '<i class="bi bi-check"></i>';
+                } else if (idx === indexActual) {
+                    statusClass = 'active';
+                }
+
+                stepsHTML += `
+                    <div class="timeline-step-container ${statusClass}">
+                        <div class="timeline-step">${checkIcon}</div>
+                        <div class="timeline-label">${est}</div>
+                    </div>
+                `;
+            });
+
+            // Calculate progress percentage
+            let progressPercent = 0;
+            if (indexActual > 0) {
+                progressPercent = (indexActual / (estados.length - 1)) * 100;
+            }
+
+            timelineHTML = `
+                <div class="timeline-steps">
+                    <div class="timeline-progress-bar" style="width: ${progressPercent}%;"></div>
+                    ${stepsHTML}
+                </div>
+            `;
+        }
+
+        // Render card
+        detalleCard.innerHTML = `
+            <!-- Migas de Pan (Breadcrumbs) -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb bg-light p-2 rounded border">
+                    <li class="breadcrumb-item"><a href="#" id="btn-volver-listado" class="text-decoration-none"><i class="bi bi-list-task"></i> Mantenimientos</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Ficha Técnica: ${mnt.idMantenimiento}</li>
+                </ol>
+            </nav>
+
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+                <h4 class="mb-0 text-primary"><i class="bi bi-file-earmark-text"></i> Ficha Técnica: ${mnt.idMantenimiento}</h4>
+                <span class="badge bg-secondary p-2 fs-6">Estado: ${estadoActual}</span>
+            </div>
+
+            <!-- Línea de Tiempo responsiva -->
+            <div class="card p-3 mb-4 shadow-sm bg-white">
+                <h6 class="text-dark fw-bold mb-3"><i class="bi bi-clock-history"></i> Progresión del Servicio</h6>
+                ${timelineHTML}
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 border-end">
+                    <h5 class="text-primary border-bottom pb-2 mb-3"><i class="bi bi-laptop"></i> Información del Dispositivo</h5>
+                    <p class="mb-2"><strong>Equipo:</strong> ${mnt.equipo}</p>
+                    <p class="mb-2"><strong>Marca/Modelo:</strong> ${mnt.marca} / ${mnt.modelo}</p>
+                    <p class="mb-2"><strong>Tipo de Dispositivo:</strong> ${mnt.tipoEquipo}</p>
+                    <p class="mb-2"><strong>N° Serie / IMEI:</strong> ${mnt.numeroSerieImei}</p>
+                    <p class="mb-2"><strong>Clave/PIN:</strong> <code class="text-dark">${mnt.clavePin}</code></p>
+                    <p class="mb-3"><strong>Accesorios:</strong> ${mnt.accesorios || 'Ninguno'}</p>
+
+                    <h5 class="text-primary border-bottom pb-2 mb-3"><i class="bi bi-person"></i> Asignaciones y Contacto</h5>
+                    <p class="mb-2"><strong>Cliente:</strong> ${cliente ? cliente.nombre : 'Desconocido'} (${mnt.cedulaCliente})</p>
+                    <p class="mb-2"><strong>Teléfono Cliente:</strong> ${cliente ? cliente.telefono : 'N/A'}</p>
+                    <p class="mb-3"><strong>Técnico Asignado:</strong> ${tecnico ? tecnico.nombre : mnt.tecnicoAsignado}</p>
+                </div>
+                <div class="col-md-6 ps-md-4">
+                    <h5 class="text-primary border-bottom pb-2 mb-3"><i class="bi bi-cash-coin"></i> Estado Financiero y Entrega</h5>
+                    <div class="row text-center mb-4 bg-light p-3 rounded border">
+                        <div class="col-4 border-end">
+                            <small class="text-muted d-block text-uppercase small">Total</small>
+                            <h5 class="text-dark mb-0 fw-bold">$${mnt.costos.totalMantenimiento.toFixed(2)}</h5>
+                        </div>
+                        <div class="col-4 border-end">
+                            <small class="text-muted d-block text-uppercase small">Abono</small>
+                            <h5 class="text-primary mb-0 fw-bold">$${mnt.costos.abono.toFixed(2)}</h5>
+                        </div>
+                        <div class="col-4">
+                            <small class="text-muted d-block text-uppercase small">Saldo</small>
+                            <h5 class="text-danger mb-0 fw-bold">$${mnt.costos.saldo.toFixed(2)}</h5>
+                        </div>
+                    </div>
+                    <p class="mb-2"><strong>Fecha Registro:</strong> ${mnt.fechaRegistro}</p>
+                    <p class="mb-3"><strong>Fecha Estimada Entrega:</strong> ${mnt.costos.fechaEstimadaEntrega || 'No definida'}</p>
+                    
+                    <h5 class="text-primary border-bottom pb-2 mb-2"><i class="bi bi-chat-left-text"></i> Diagnóstico / Observaciones</h5>
+                    <p class="bg-light p-3 rounded small border text-muted" style="min-height: 80px;">${mnt.costos.observaciones || 'Sin observaciones registradas.'}</p>
+                </div>
+            </div>
+
+            <h5 class="text-primary border-bottom pb-2 my-4"><i class="bi bi-check2-square"></i> Diagnóstico Inicial de Funcionalidad</h5>
+            <div class="row">
+                ${fallasHTML}
+            </div>
+
+            <div class="d-flex justify-content-end mt-4 border-top pt-3">
+                <button type="button" class="btn btn-secondary px-4" id="btn-cerrar-detalle"><i class="bi bi-arrow-left"></i> Volver</button>
             </div>
         `;
 
-        const detailsModal = new bootstrap.Modal(modalDetalles);
-        detailsModal.show();
+        // Add progress height trigger for responsive vertical view in JS
+        const progressPercent = indexActual > 0 ? (indexActual / (estados.length - 1)) * 100 : 0;
+        const adjustProgressBar = () => {
+            const isMobile = window.innerWidth <= 768;
+            const progressBar = detalleCard.querySelector('.timeline-progress-bar');
+            if (progressBar && isMobile && estadoActual !== 'Cancelado') {
+                progressBar.style.width = '4px';
+                progressBar.style.height = `${progressPercent}%`;
+            } else if (progressBar && !isMobile && estadoActual !== 'Cancelado') {
+                progressBar.style.width = `${progressPercent}%`;
+                progressBar.style.height = '4px';
+            }
+        };
+        adjustProgressBar();
+        window.addEventListener('resize', adjustProgressBar);
+
+        // Bind Back button event
+        const volverListado = (e) => {
+            e.preventDefault();
+            listaCard.classList.remove('d-none');
+            detalleCard.classList.add('d-none');
+            window.removeEventListener('resize', adjustProgressBar);
+        };
+
+        document.getElementById('btn-volver-listado').addEventListener('click', volverListado);
+        document.getElementById('btn-cerrar-detalle').addEventListener('click', volverListado);
+
+        listaCard.classList.add('d-none');
+        detalleCard.classList.remove('d-none');
     }
 
     /**
@@ -1295,6 +1394,177 @@ class UI_SistemaMantenimiento {
         document.getElementById('mnt-saldo').value = mnt.costos.saldo.toFixed(2);
         document.getElementById('mnt-fecha-entrega').value = mnt.costos.fechaEstimadaEntrega;
         document.getElementById('mnt-estado').value = mnt.costos.estado;
+    }
+
+    /**
+     * Muestra un modal flotante e interactivo para cambiar el estado del mantenimiento y elegir el canal de notificación.
+     */
+    mostrarModalCambioEstadoRapido(mnt, callback) {
+        let modalElement = document.getElementById('modalEstadoQuick');
+        if (!modalElement) {
+            const div = document.createElement('div');
+            div.id = 'modalEstadoQuick';
+            div.className = 'modal fade';
+            div.setAttribute('tabindex', '-1');
+            document.body.appendChild(div);
+            modalElement = div;
+        }
+
+        const estados = ['Recibido', 'En Reparación', 'Listo para Entrega', 'Entregado'];
+        let estadoSeleccionado = mnt.costos.estado;
+        let proveedorSeleccionado = 'Correo'; // Default
+
+        // Render initial HTML layout once
+        let stepsHTML = '';
+        estados.forEach((est, idx) => {
+            const isCurrent = est === mnt.costos.estado;
+            stepsHTML += `
+                <div class="timeline-step-container clickable-step" data-estado="${est}" style="cursor: pointer; position: relative;">
+                    <div class="timeline-step">${idx + 1}</div>
+                    <div class="timeline-label">${est}</div>
+                    ${isCurrent ? '<small class="text-muted d-block text-center" style="font-size:0.6rem; position:absolute; bottom:-16px; width:100px;">Actual</small>' : ''}
+                </div>
+            `;
+        });
+
+        modalElement.innerHTML = `
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+                    <div class="modal-header modal-header-pres bg-primary text-white p-3">
+                        <h5 class="modal-title mb-0"><i class="bi bi-arrow-repeat"></i> Cambiar Estado Rápido: ${mnt.idMantenimiento}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4" style="background-color: #f8f9fa;">
+                        <p class="text-secondary small mb-3">1. Selecciona el nuevo estado haciendo clic en el paso de la línea de tiempo:</p>
+                        
+                        <!-- Timeline Interactivo -->
+                        <div class="card p-3 mb-4 shadow-sm border bg-white">
+                            <div class="timeline-steps my-2">
+                                <div class="timeline-progress-bar bg-success" style="width: 0%;"></div>
+                                ${stepsHTML}
+                            </div>
+                        </div>
+
+                        <p class="text-secondary small mb-3">2. Elige el canal para enviar la notificación automática al cliente:</p>
+                        
+                        <!-- Selector de canal de notificación con estilo premium -->
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="channel-card border rounded p-3 text-center active border-primary bg-light-primary" data-canal="Correo" style="cursor: pointer; transition: all 0.2s;">
+                                    <i class="bi bi-envelope-at text-primary fs-2 d-block mb-2"></i>
+                                    <strong>Correo Electrónico (Gmail)</strong>
+                                    <p class="text-muted small mb-0 mt-1" style="font-size:0.75rem;">Envía una alerta automática al email del cliente.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="channel-card border rounded p-3 text-center" data-canal="WhatsApp" style="cursor: pointer; transition: all 0.2s;">
+                                    <i class="bi bi-whatsapp text-success fs-2 d-block mb-2"></i>
+                                    <strong>WhatsApp (Wss)</strong>
+                                    <p class="text-muted small mb-0 mt-1" style="font-size:0.75rem;">Envía una alerta mediante mensaje de WhatsApp.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-top p-3">
+                        <button type="button" class="btn btn-outline-secondary px-3" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary px-4 fw-bold" id="btn-save-quick-status">Guardar Cambios</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Update view function without re-rendering innerHTML
+        const updateUIState = () => {
+            // Update steps in timeline
+            modalElement.querySelectorAll('.clickable-step').forEach((step, idx) => {
+                const est = step.getAttribute('data-estado');
+                const isSelected = est === estadoSeleccionado;
+                
+                step.classList.remove('active', 'completed');
+                const stepCircle = step.querySelector('.timeline-step');
+
+                if (isSelected) {
+                    step.classList.add('active');
+                    stepCircle.innerHTML = idx + 1;
+                } else if (estados.indexOf(est) < estados.indexOf(estadoSeleccionado)) {
+                    step.classList.add('completed');
+                    stepCircle.innerHTML = '<i class="bi bi-check"></i>';
+                } else {
+                    stepCircle.innerHTML = idx + 1;
+                }
+            });
+
+            // Update timeline progress bar width
+            const indexSel = estados.indexOf(estadoSeleccionado);
+            const progressPercent = indexSel > 0 ? (indexSel / (estados.length - 1)) * 100 : 0;
+            const progressBar = modalElement.querySelector('.timeline-progress-bar');
+            if (progressBar) {
+                progressBar.style.width = `${progressPercent}%`;
+            }
+
+            // Update channel cards
+            modalElement.querySelectorAll('.channel-card').forEach(card => {
+                const canal = card.getAttribute('data-canal');
+                card.classList.remove('active', 'border-primary', 'bg-light-primary', 'border-success', 'bg-light-success');
+                
+                if (canal === proveedorSeleccionado) {
+                    if (canal === 'Correo') {
+                        card.classList.add('active', 'border-primary', 'bg-light-primary');
+                    } else if (canal === 'WhatsApp') {
+                        card.classList.add('active', 'border-success', 'bg-light-success');
+                    }
+                }
+            });
+        };
+
+        // Bind click handlers for timeline steps
+        modalElement.querySelectorAll('.clickable-step').forEach(step => {
+            step.addEventListener('click', () => {
+                estadoSeleccionado = step.getAttribute('data-estado');
+                updateUIState();
+            });
+        });
+
+        // Bind click handlers for channel selection
+        modalElement.querySelectorAll('.channel-card').forEach(card => {
+            card.addEventListener('click', () => {
+                proveedorSeleccionado = card.getAttribute('data-canal');
+                updateUIState();
+            });
+        });
+
+        // Initialize state view values
+        updateUIState();
+
+        // Get or create Bootstrap modal instance
+        let bootstrapModal = bootstrap.Modal.getInstance(modalElement);
+        if (!bootstrapModal) {
+            bootstrapModal = new bootstrap.Modal(modalElement);
+        }
+
+        // Bind click handler for save button
+        const saveButton = modalElement.querySelector('#btn-save-quick-status');
+        // Remove existing listener if any by cloning the button (to prevent duplicates)
+        const newSaveButton = saveButton.cloneNode(true);
+        saveButton.parentNode.replaceChild(newSaveButton, saveButton);
+
+        newSaveButton.addEventListener('click', () => {
+            try {
+                this.controlador.registrarMantenimiento({
+                    accion: 'actualizarEstado',
+                    idMantenimiento: mnt.idMantenimiento,
+                    nuevoEstado: estadoSeleccionado,
+                    proveedorNotificacion: proveedorSeleccionado
+                });
+                bootstrapModal.hide();
+                if (callback) callback();
+                alert(`Estado actualizado a "${estadoSeleccionado}" y notificación enviada por ${proveedorSeleccionado} con éxito.`);
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        });
+
+        bootstrapModal.show();
     }
 
     /**
@@ -1488,6 +1758,9 @@ class UI_SistemaMantenimiento {
                     document.getElementById('cli-nombre').value = cliente.nombre;
                     document.getElementById('cli-correo').value = cliente.correo;
                     document.getElementById('cli-telefono').value = cliente.telefono;
+                    if (cliente.fechaNacimiento) {
+                        document.getElementById('cli-fecha-nacimiento').value = cliente.fechaNacimiento;
+                    }
                     
                     const groupUsuario = document.getElementById('group-cli-usuario');
                     if (groupUsuario) groupUsuario.classList.add('d-none');
@@ -1511,15 +1784,31 @@ class UI_SistemaMantenimiento {
             const nombre = document.getElementById('cli-nombre').value.trim();
             const correo = document.getElementById('cli-correo').value.trim();
             const telefono = document.getElementById('cli-telefono').value.trim();
+            const fechaNacimiento = document.getElementById('cli-fecha-nacimiento').value;
             const usuario = document.getElementById('cli-usuario')?.value.trim() || undefined;
 
-            if (!cliCedula || !nombre || !correo || !telefono) {
+            if (!cliCedula || !nombre || !correo || !telefono || !fechaNacimiento) {
                 alert("Todos los campos obligatorios deben ser completados.");
                 return;
             }
 
-            if (!correo.includes('@')) {
+            if (!validarCedulaEcuatoriana(cliCedula)) {
+                alert("La cédula ingresada no es válida.");
+                return;
+            }
+
+            if (!validarTelefonoEcuatoriano(telefono)) {
+                alert("El número de teléfono celular no es válido. Debe tener 10 dígitos y empezar con 09.");
+                return;
+            }
+
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
                 alert("Ingrese un correo electrónico válido.");
+                return;
+            }
+
+            if (!validarEdadPermitida(fechaNacimiento)) {
+                alert("La edad permitida para el registro debe estar entre 18 y 100 años.");
                 return;
             }
 
@@ -1529,7 +1818,8 @@ class UI_SistemaMantenimiento {
                 nombre,
                 correo,
                 telefono,
-                usuario
+                usuario,
+                fechaNacimiento
             };
 
             try {
@@ -1771,6 +2061,7 @@ class UI_SistemaMantenimiento {
                     totalInput.value = mnt.costos.totalMantenimiento;
                     abonoInput.value = mnt.costos.abono;
                     saldoInput.value = mnt.costos.saldo.toFixed(2);
+                    document.getElementById('mnt-fecha-ingreso').value = mnt.fechaRegistro;
                     document.getElementById('mnt-fecha-entrega').value = mnt.costos.fechaEstimadaEntrega;
                     document.getElementById('mnt-estado').value = mnt.costos.estado;
                     document.getElementById('mnt-observaciones').value = mnt.costos.observaciones;
@@ -1786,6 +2077,7 @@ class UI_SistemaMantenimiento {
             breadcrumbAction.textContent = 'Registrar Mantenimiento';
             formTitle.textContent = 'Registrar Nuevo Mantenimiento';
             document.getElementById('mnt-id').value = '';
+            document.getElementById('mnt-fecha-ingreso').value = new Date().toISOString().split('T')[0];
         }
 
         formMnt.addEventListener('submit', (e) => {
@@ -1800,9 +2092,30 @@ class UI_SistemaMantenimiento {
             const tecnico = selectTecnico.value;
             const totalMnt = parseFloat(totalInput.value || 0);
             const abono = parseFloat(abonoInput.value || 0);
+            const fechaIngreso = document.getElementById('mnt-fecha-ingreso').value;
             const fechaEntrega = document.getElementById('mnt-fecha-entrega').value;
             const estado = document.getElementById('mnt-estado').value;
             const observaciones = document.getElementById('mnt-observaciones').value.trim();
+
+            if (!fechaIngreso) {
+                alert("Debe ingresar la fecha de ingreso.");
+                return;
+            }
+
+            if (!fechaEntrega) {
+                alert("Debe ingresar la fecha estimada de entrega.");
+                return;
+            }
+
+            const dateIngreso = new Date(fechaIngreso);
+            const dateEntrega = new Date(fechaEntrega);
+            dateIngreso.setHours(0,0,0,0);
+            dateEntrega.setHours(0,0,0,0);
+
+            if (dateEntrega < dateIngreso) {
+                alert("La fecha estimada de entrega no puede ser anterior a la fecha de ingreso.");
+                return;
+            }
 
             if (!equipo || !marca || !modelo || !serial || !pin) {
                 alert("Todos los datos del dispositivo son obligatorios.");
@@ -1835,6 +2148,7 @@ class UI_SistemaMantenimiento {
                 accesorios: document.getElementById('mnt-accesorios').value.trim(),
                 cedulaCliente: cliente,
                 tecnicoAsignado: tecnico,
+                fechaRegistro: fechaIngreso,
                 daños: {
                     enciende: document.getElementById('dmg-enciende').checked,
                     botones: document.getElementById('dmg-botones').checked,
@@ -1879,6 +2193,13 @@ class UI_SistemaMantenimiento {
      * Lógica para imprimir-informe.html
      */
     mostrarPantallaImprimirInforme() {
+        const sesion = this.controlador.sesionActiva;
+        if (sesion && sesion.rol === 'Cliente') {
+            alert("No tiene permisos para acceder a esta sección.");
+            window.location.href = 'mantenimientos.html';
+            return;
+        }
+
         const targetSheet = document.getElementById('print-preview-area-target');
         if (!targetSheet) return;
 
@@ -1890,7 +2211,6 @@ class UI_SistemaMantenimiento {
         const actionBreadcrumb = document.getElementById('breadcrumb-action');
         const printTitle = document.getElementById('print-title');
         
-        const sesion = this.controlador.sesionActiva;
         document.getElementById('print-preview-date').textContent = new Date().toLocaleDateString();
         document.getElementById('print-preview-user').textContent = sesion ? sesion.nombre : 'Usuario';
 
@@ -2510,6 +2830,20 @@ class UI_SistemaMantenimiento {
                 return;
             }
 
+            // Validaciones locales
+            if (!validarTelefonoEcuatoriano(telefono)) {
+                errorDiv.textContent = 'El número de teléfono celular no es válido. Debe tener 10 dígitos y empezar con 09.';
+                errorDiv.classList.remove('d-none');
+                return;
+            }
+
+            const fechaNac = document.getElementById('pers-fecha-nacimiento').value;
+            if (!validarEdadPermitida(fechaNac)) {
+                errorDiv.textContent = 'La edad permitida para el registro debe estar entre 18 y 100 años.';
+                errorDiv.classList.remove('d-none');
+                return;
+            }
+
             try {
                 // Register user via database repo adapter
                 const resultadoRegistro = this.controlador.repo.registrarClientePublico({
@@ -2519,6 +2853,7 @@ class UI_SistemaMantenimiento {
                     rol,
                     correo,
                     telefono,
+                    fechaNacimiento: fechaNac,
                     especialidad: rol === 'Técnico' ? especialidad : undefined
                 });
 
